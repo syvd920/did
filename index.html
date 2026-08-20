@@ -9,7 +9,7 @@
 h1{font-size:22px;margin:0 0 6px}.desc{font-size:13px;color:#6b7280;line-height:1.5}label{display:block;font-size:13px;font-weight:800;margin:12px 0 6px}
 input,select,textarea{width:100%;padding:10px;border:1px solid #d9dde3;border-radius:9px;background:#fff}textarea{min-height:72px;resize:vertical}
 .cellform{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:14px;background:#fafafa}.celltitle{font-weight:900;margin-bottom:8px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stylegrid{display:grid;grid-template-columns:1.3fr .7fr .7fr;gap:6px;margin-top:7px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stylegrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}
 button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.primary{background:#111;color:#fff;width:100%;margin-top:15px}
 .preview{display:flex;justify-content:center;align-items:flex-start;overflow:auto}canvas{max-width:100%;height:auto;background:#ddd;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
 @media(max-width:950px){.wrap{grid-template-columns:1fr}}
@@ -144,10 +144,11 @@ function baseFields(cell){
 }
 function styleControls(key,idx,base){
   const wrap=document.createElement('div');wrap.className='stylegrid';
-  const fs=document.createElement('select');fonts.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;fs.appendChild(o)});fs.value=base.fontFamily||'Arial';fs.id=`${key}Font${idx}`;
-  const c=document.createElement('input');c.type='color';c.value=base.color||'#000000';c.id=`${key}Color${idx}`;
+  const c=document.createElement('input');c.type='color';c.value='#000000';c.id=`${key}Color${idx}`;
   const s=document.createElement('input');s.type='number';s.min=10;s.max=160;s.value=base.fontSize||24;s.id=`${key}Size${idx}`;
-  [fs,c,s].forEach(el=>el.addEventListener('input',render));wrap.append(fs,c,s);return wrap;
+  c.addEventListener('input',render);s.addEventListener('input',render);
+  wrap.append(c,s);
+  return wrap;
 }
 function setupForms(){
   if(!$('orientation').value || !$('split').value || !$('tpl').value){$('forms').innerHTML='';return;}
@@ -218,39 +219,19 @@ function centeredDrawY(cfg,newSize){
   return cfg.y+(baseSize-newSize)/2;
 }
 function drawWrapped(text,cfg,idx){
-  const font=document.getElementById(`descriptionFont${idx}`).value;
-  const size=Number(document.getElementById(`descriptionSize${idx}`).value);
-  const color=document.getElementById(`descriptionColor${idx}`).value;
-  const weight=cfg.weight||700;
-  ctx.font=`${weight} ${size}px "${font}"`;
-  ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
-  const mw=cfg.maxWidth||400;
-  const baseLH=cfg.lineHeight||((cfg.fontSize||size)*1.25);
-  const lh=baseLH*(size/(cfg.fontSize||size));
-  let line='',lines=[];
-  for(const ch of [...text]){
-    const test=line+ch;
-    if(ctx.measureText(test).width>mw&&line){lines.push(line);line=ch}else line=test;
-  }
-  if(line)lines.push(line);
-  const shown=lines.slice(0,2);
-  const blockBaseH=Math.max(1,shown.length)*(cfg.lineHeight||((cfg.fontSize||size)*1.25));
-  const blockNewH=Math.max(1,shown.length)*lh;
-  const y=cfg.y+(blockBaseH-blockNewH)/2;
-  shown.forEach((ln,i)=>{
-    const x=centeredDrawX(ln,cfg,font,size,weight);
-    ctx.fillText(ln,x,y+i*lh);
-  });
+  const size=Number(document.getElementById(`descriptionSize${idx}`).value),color=document.getElementById(`descriptionColor${idx}`).value;
+  ctx.font=`${cfg.weight||700} ${size}px "${cfg.fontFamily||'Arial'}"`;ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
+  ctx.lineJoin='round';ctx.strokeStyle=cfg.strokeColor||'#000000';ctx.lineWidth=cfg.strokeWidth||2;
+  const mw=cfg.maxWidth||400,lh=cfg.lineHeight||size*1.25;let line='',lines=[];
+  for(const ch of [...text]){const test=line+ch;if(ctx.measureText(test).width>mw&&line){lines.push(line);line=ch}else line=test}if(line)lines.push(line);
+  lines.slice(0,2).forEach((ln,i)=>{if(cfg.strokeEnabled)ctx.strokeText(ln,cfg.x,cfg.y+i*lh);ctx.fillText(ln,cfg.x,cfg.y+i*lh)});
 }
 function drawSimple(text,cfg,key,idx){
-  const font=document.getElementById(`${key}Font${idx}`).value;
-  const size=Number(document.getElementById(`${key}Size${idx}`).value);
-  const color=document.getElementById(`${key}Color${idx}`).value;
-  const weight=cfg.weight||700;
-  ctx.font=`${weight} ${size}px "${font}"`;ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
-  const x=centeredDrawX(text,cfg,font,size,weight);
-  const y=centeredDrawY(cfg,size);
-  ctx.fillText(text,x,y);
+  const size=Number(document.getElementById(`${key}Size${idx}`).value),color=document.getElementById(`${key}Color${idx}`).value;
+  ctx.font=`${cfg.weight||700} ${size}px "${cfg.fontFamily||'Arial'}"`;ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
+  ctx.lineJoin='round';ctx.strokeStyle=cfg.strokeColor||'#000000';ctx.lineWidth=cfg.strokeWidth||2;
+  if(cfg.strokeEnabled)ctx.strokeText(text,cfg.x,cfg.y);
+  ctx.fillText(text,cfg.x,cfg.y);
 }
 function loadBg(){
   if(!$('orientation').value || !$('split').value || !$('tpl').value){bgImg=null;render();return;}
@@ -265,6 +246,7 @@ function render(){
   cells.forEach((cell,idx)=>{
     if(t.hasPhoto&&cellImages[idx]){ctx.save();ctx.beginPath();ctx.rect(cell.x,cell.y,cell.w,cell.h);ctx.clip();contain(cellImages[idx],cell);ctx.restore()}
   });
+  if(ld&&ld.shapes)ld.shapes.forEach(s=>{ctx.save();ctx.globalAlpha=s.opacity??1;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(s.x,s.y,s.w,s.h,s.radius||0);else ctx.rect(s.x,s.y,s.w,s.h);ctx.fillStyle=s.color||'#ffffff';ctx.fill();if((s.borderWidth||0)>0){ctx.lineWidth=s.borderWidth;ctx.strokeStyle=s.borderColor||'#000000';ctx.stroke()}ctx.restore()});
   if(bgImg)ctx.drawImage(bgImg,0,0,d.width,d.height);
   cells.forEach((cell,idx)=>{
     const flds=(ld&&ld.cellData&&ld.cellData[idx]&&ld.cellData[idx].fields)||baseFields(cell),fm=Object.fromEntries(flds.map(f=>[f.key,f]));
