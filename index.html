@@ -20,8 +20,27 @@ button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.
 <section class="panel">
 <h1>매물 광고 제작기</h1>
 <div class="desc">분할 수만큼 각각 다른 매물 정보를 입력할 수 있습니다.</div>
-<label>템플릿</label><select id="tpl"></select>
-<label>방향</label><select id="orientation"><option value="landscape">가로버전</option><option value="portrait">세로버전</option></select>
+<label>1. 방향 선택</label>
+<select id="orientation">
+  <option value="">선택하세요</option>
+  <option value="landscape">가로버전</option>
+  <option value="portrait">세로버전</option>
+</select>
+
+<label>2. 분할 선택</label>
+<select id="split" disabled>
+  <option value="">선택하세요</option>
+  <option value="1">1분할</option>
+  <option value="2">2분할</option>
+  <option value="3">3분할</option>
+  <option value="4">4분할</option>
+  <option value="6">6분할</option>
+</select>
+
+<label>3. 템플릿 선택</label>
+<select id="tpl" disabled>
+  <option value="">방향과 분할을 먼저 선택하세요</option>
+</select>
 <div id="forms"></div>
 <button class="primary" id="download">PNG 다운로드</button>
 </section>
@@ -35,11 +54,47 @@ const $=id=>document.getElementById(id),ctx=$('canvas').getContext('2d');
 let templates=(window.PUBLISHED_TEMPLATES&&window.PUBLISHED_TEMPLATES.length)?window.PUBLISHED_TEMPLATES:DEFAULT_TEMPLATES,bgImg=null,cellImages=[];
 const fonts=['Arial','Noto Sans KR','Pretendard','serif','sans-serif'];
 function cur(){
-  const t=templates.find(t=>t.id===$('tpl').value)||templates[0];
-  if(!t.enabledFields)t.enabledFields={dealType:true,propertyName:true,pyeong:true,roomsBaths:true,description:true};
+  const t=templates.find(t=>t.id===$('tpl').value)||templates.find(t=>Number(t.panelSplit||1)===Number($('split').value||0))||templates[0];
+  if(!t.enabledFields)t.enabledFields={dealType:true,propertyName:true,price:true,pyeong:true,roomsBaths:true,description:true};
   return t;
 }
-function fill(){templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tpl').appendChild(o)})}
+function refreshTemplateOptions(){
+  const orientation=$('orientation').value;
+  const split=Number($('split').value||0);
+  const select=$('tpl');
+  select.innerHTML='';
+
+  if(!orientation || !split){
+    const o=document.createElement('option');
+    o.value='';
+    o.textContent='방향과 분할을 먼저 선택하세요';
+    select.appendChild(o);
+    select.disabled=true;
+    return;
+  }
+
+  const matched=templates.filter(t=>{
+    const orientationOk=!t.availableOrientations || t.availableOrientations[orientation]!==false;
+    return orientationOk && Number(t.panelSplit||1)===split;
+  });
+
+  if(!matched.length){
+    const o=document.createElement('option');
+    o.value='';
+    o.textContent='해당 조건의 템플릿이 없습니다';
+    select.appendChild(o);
+    select.disabled=true;
+    return;
+  }
+
+  matched.forEach(t=>{
+    const o=document.createElement('option');
+    o.value=t.id;
+    o.textContent=t.name;
+    select.appendChild(o);
+  });
+  select.disabled=false;
+}
 function makeCells(split,w,h,o){
   let cells=[];
   if(split===1)cells=[{x:0,y:0,w,h}];
@@ -81,6 +136,7 @@ function baseFields(cell){
   return [
     {key:'dealType',x:cell.x+pad,y:cell.y+pad,fontSize:Math.max(18,cell.w*.045),color:'#fff',weight:800,fontFamily:'Arial'},
     {key:'propertyName',x:cell.x+pad,y:cell.y+pad+48,fontSize:Math.max(26,cell.w*.08),color:'#fff',weight:900,fontFamily:'Arial'},
+    {key:'price',x:cell.x+pad,y:cell.y+pad+105,fontSize:Math.max(22,cell.w*.055),color:'#ffd54a',weight:900,fontFamily:'Arial'},
     {key:'pyeong',x:cell.x+pad,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#fff',weight:700,fontFamily:'Arial'},
     {key:'roomsBaths',x:cell.x+cell.w*.42,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#fff',weight:700,fontFamily:'Arial'},
     {key:'description',x:cell.x+pad,y:cell.y+cell.h*.70,fontSize:Math.max(17,cell.w*.038),color:'#fff',weight:700,fontFamily:'Arial',maxWidth:cell.w-pad*2,maxLines:2,lineHeight:Math.max(24,cell.w*.05)}
@@ -94,6 +150,7 @@ function styleControls(key,idx,base){
   [fs,c,s].forEach(el=>el.addEventListener('input',render));wrap.append(fs,c,s);return wrap;
 }
 function setupForms(){
+  if(!$('orientation').value || !$('split').value || !$('tpl').value){$('forms').innerHTML='';return;}
   const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o],cells=makeCells(t.panelSplit||1,d.width,d.height,o);
   const box=$('forms');box.innerHTML='';cellImages=[];
   cells.forEach((cell,idx)=>{
@@ -105,13 +162,14 @@ function setupForms(){
     }
     const deal=document.createElement('select');deal.id=`dealType${idx}`;['매매','월세','전세'].forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;deal.appendChild(op)});
     const name=document.createElement('input');name.id=`propertyName${idx}`;name.value='매물명';
+    const price=document.createElement('input');price.id=`price${idx}`;price.value='매매 9억 8,000만원';
     const row=document.createElement('div');row.className='row';
     const py=document.createElement('input');py.type='number';py.id=`pyeong${idx}`;py.value=25;
     const rb=document.createElement('div');rb.className='row';
     const room=document.createElement('input');room.type='number';room.id=`room${idx}`;room.value=2;
     const bath=document.createElement('input');bath.type='number';bath.id=`bath${idx}`;bath.value=1;rb.append(room,bath);row.append(py,rb);
     const desc=document.createElement('textarea');desc.id=`description${idx}`;desc.value='매물 설명을 입력하세요.';
-    [deal,name,py,room,bath,desc].forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});
+    [deal,name,price,py,room,bath,desc].forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});
     if(t.enabledFields.dealType!==false){
       const l=document.createElement('label');l.textContent='매물 구분';
       f.append(l,deal,styleControls('dealType',idx,flds.find(x=>x.key==='dealType')||{}));
@@ -119,6 +177,10 @@ function setupForms(){
     if(t.enabledFields.propertyName!==false){
       const l=document.createElement('label');l.textContent='매물명';
       f.append(l,name,styleControls('propertyName',idx,flds.find(x=>x.key==='propertyName')||{}));
+    }
+    if(t.enabledFields.price!==false){
+      const l=document.createElement('label');l.textContent='매물금액';
+      f.append(l,price,styleControls('price',idx,flds.find(x=>x.key==='price')||{}));
     }
     if(t.enabledFields.pyeong!==false){
       const l=document.createElement('label');l.textContent='평';
@@ -191,11 +253,13 @@ function drawSimple(text,cfg,key,idx){
   ctx.fillText(text,x,y);
 }
 function loadBg(){
+  if(!$('orientation').value || !$('split').value || !$('tpl').value){bgImg=null;render();return;}
   const t=cur(),o=$('orientation').value,src=t.backgrounds&&t.backgrounds[o];
   if(!src){bgImg=null;render();return}
   const im=new Image();im.onload=()=>{bgImg=im;render()};im.src=src;
 }
 function render(){
+  if(!$('orientation').value || !$('split').value || !$('tpl').value){ctx.clearRect(0,0,$('canvas').width,$('canvas').height);return;}
   const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o],cells=makeCells(t.panelSplit||1,d.width,d.height,o);
   $('canvas').width=d.width;$('canvas').height=d.height;ctx.fillStyle='#fff';ctx.fillRect(0,0,d.width,d.height);
   cells.forEach((cell,idx)=>{
@@ -206,13 +270,34 @@ function render(){
     const flds=(ld&&ld.cellData&&ld.cellData[idx]&&ld.cellData[idx].fields)||baseFields(cell),fm=Object.fromEntries(flds.map(f=>[f.key,f]));
     if(t.enabledFields.dealType!==false) drawSimple(document.getElementById(`dealType${idx}`).value,fm.dealType,'dealType',idx);
     if(t.enabledFields.propertyName!==false) drawSimple(document.getElementById(`propertyName${idx}`).value,fm.propertyName,'propertyName',idx);
+    if(t.enabledFields.price!==false) drawSimple(document.getElementById(`price${idx}`).value,fm.price,'price',idx);
     if(t.enabledFields.pyeong!==false) drawSimple((document.getElementById(`pyeong${idx}`).value||'')+'평',fm.pyeong,'pyeong',idx);
     if(t.enabledFields.roomsBaths!==false) drawSimple(`방 ${document.getElementById(`room${idx}`).value||0} / 욕실 ${document.getElementById(`bath${idx}`).value||0}`,fm.roomsBaths,'roomsBaths',idx);
     if(t.enabledFields.description!==false) drawWrapped(document.getElementById(`description${idx}`).value,fm.description,idx);
   });
 }
-$('tpl').addEventListener('change',()=>{setupForms();loadBg()});$('orientation').addEventListener('change',()=>{setupForms();loadBg()});
+$('orientation').addEventListener('change',()=>{
+  $('split').disabled=!$('orientation').value;
+  $('split').value='';
+  refreshTemplateOptions();
+  $('forms').innerHTML='';
+  bgImg=null;
+  render();
+});
+$('split').addEventListener('change',()=>{
+  refreshTemplateOptions();
+  if(!$('tpl').disabled && $('tpl').options.length){
+    $('tpl').selectedIndex=0;
+    setupForms();
+    loadBg();
+  }else{
+    $('forms').innerHTML='';
+    bgImg=null;
+    render();
+  }
+});
+$('tpl').addEventListener('change',()=>{setupForms();loadBg();});
 $('download').addEventListener('click',()=>{render();const a=document.createElement('a');a.download='realestate_ad.png';a.href=$('canvas').toDataURL('image/png');a.click()});
-fill();setupForms();loadBg();
+refreshTemplateOptions();render();
 </script>
 </body></html>
