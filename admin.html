@@ -21,7 +21,7 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
 .panelnum{position:absolute;top:4px;right:5px;font-size:14px;color:#6d28d9;font-weight:900;background:rgba(255,255,255,.8);padding:2px 5px;border-radius:5px}
 .el{position:absolute;border:1px dashed transparent;cursor:move;user-select:none;padding:2px 4px;white-space:pre-wrap}
 .el.selected{border-color:#2563eb;background:rgba(37,99,235,.08)}
-.photo{position:absolute;border:2px dashed #0891b2;background:rgba(8,145,178,.08);display:flex;align-items:center;justify-content:center;color:#0e7490;font-weight:800;cursor:move;resize:both;overflow:auto}
+.photo{position:absolute;border:2px dashed #0891b2;background:rgba(8,145,178,.08);display:flex;align-items:center;justify-content:center;color:#0e7490;font-weight:800;cursor:move;overflow:hidden}.photo::after{content:'';position:absolute;right:0;bottom:0;width:18px;height:18px;background:rgba(8,145,178,.65);clip-path:polygon(100% 0,100% 100%,0 100%);cursor:nwse-resize}
 .section{border-top:1px solid #eceff3;margin-top:16px;padding-top:14px}
 .small{font-size:12px;color:#777;line-height:1.5}
 .thumb{width:100%;max-height:120px;object-fit:contain;background:#f3f4f6;border-radius:8px;margin-top:8px}
@@ -220,6 +220,53 @@ function selectField(d,el){
   selectedField=d;document.querySelectorAll('.el').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');
   $('fontFamily').value=d.fontFamily||'Arial';$('fontSize').value=d.fontSize;$('fontColor').value=d.color;$('fontWeight').value=String(d.weight);$('align').value=d.align||'left';
 }
+
+function bindPhotoDragResize(el,data,cell){
+  let mode='move', startX=0, startY=0, startLeft=0, startTop=0, startW=0, startH=0;
+
+  el.addEventListener('pointerdown',e=>{
+    const r=el.getBoundingClientRect();
+    const nearRight=(r.right-e.clientX)<18;
+    const nearBottom=(r.bottom-e.clientY)<18;
+    mode=(nearRight||nearBottom)?'resize':'move';
+
+    startX=e.clientX;startY=e.clientY;
+    startLeft=data.x;startTop=data.y;startW=data.w;startH=data.h;
+    el.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  el.addEventListener('pointermove',e=>{
+    if(!el.hasPointerCapture(e.pointerId)) return;
+
+    const er=$('editor').getBoundingClientRect();
+    const sx=$('editor').offsetWidth/er.width;
+    const sy=$('editor').offsetHeight/er.height;
+    const dx=(e.clientX-startX)*sx;
+    const dy=(e.clientY-startY)*sy;
+
+    if(mode==='move'){
+      let nx=startLeft+dx;
+      let ny=startTop+dy;
+
+      nx=Math.max(cell.x,Math.min(nx,cell.x+cell.w-data.w));
+      ny=Math.max(cell.y,Math.min(ny,cell.y+cell.h-data.h));
+
+      data.x=nx;data.y=ny;
+      el.style.left=nx+'px';el.style.top=ny+'px';
+    }else{
+      let nw=Math.max(40,startW+dx);
+      let nh=Math.max(40,startH+dy);
+
+      nw=Math.min(nw,cell.x+cell.w-data.x);
+      nh=Math.min(nh,cell.y+cell.h-data.y);
+
+      data.w=nw;data.h=nh;
+      el.style.width=nw+'px';el.style.height=nh+'px';
+    }
+  });
+}
+
 function render(){
   ensure(current,ori());
   const d=dims(),scale=Math.min(1,920/d.width,720/d.height),ed=$('editor');
@@ -234,7 +281,16 @@ function render(){
     const num=document.createElement('div');num.className='panelnum';num.textContent=`${idx+1}`;wrap.appendChild(num);ed.appendChild(wrap);
     if(current.hasPhoto){
       const p=ld.cellData[idx].photo;
-      const pe=document.createElement('div');pe.className='photo';pe.textContent=`사진 ${idx+1}`;pe.style.left=p.x+'px';pe.style.top=p.y+'px';pe.style.width=p.w+'px';pe.style.height=p.h+'px';ed.appendChild(pe);
+      const pe=document.createElement('div');
+      pe.className='photo';
+      pe.textContent=`사진 ${idx+1}`;
+      pe.style.left=p.x+'px';
+      pe.style.top=p.y+'px';
+      pe.style.width=p.w+'px';
+      pe.style.height=p.h+'px';
+      pe.dataset.cellIndex=idx;
+      ed.appendChild(pe);
+      bindPhotoDragResize(pe,p,cell);
     }
     ld.cellData[idx].fields.forEach(f=>{
       const el=document.createElement('div');el.className='el';el.textContent=f.label;el.style.left=f.x+'px';el.style.top=f.y+'px';el.style.fontSize=f.fontSize+'px';el.style.color=f.color;el.style.fontWeight=f.weight;el.style.fontFamily=f.fontFamily||'Arial';el.style.textAlign=f.align||'left';
