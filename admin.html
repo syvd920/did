@@ -17,9 +17,11 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .canvasbox{display:flex;justify-content:center;align-items:flex-start;overflow:auto;min-height:760px}
 #editor{position:relative;background:#eceff3;box-shadow:0 8px 30px rgba(0,0,0,.12);transform-origin:top center;background-size:100% 100%;background-repeat:no-repeat}
+.panelcell{position:absolute;border:1px dashed #8b5cf6;background:rgba(139,92,246,.04);overflow:hidden}
+.panelnum{position:absolute;top:4px;right:5px;font-size:14px;color:#6d28d9;font-weight:900;background:rgba(255,255,255,.8);padding:2px 5px;border-radius:5px}
 .el{position:absolute;border:1px dashed transparent;cursor:move;user-select:none;padding:2px 4px;white-space:pre-wrap}
 .el.selected{border-color:#2563eb;background:rgba(37,99,235,.08)}
-.photo{position:absolute;border:2px dashed #7c3aed;background:rgba(124,58,237,.10);display:flex;align-items:center;justify-content:center;color:#6d28d9;font-weight:800;cursor:move;resize:both;overflow:auto}
+.photo{position:absolute;border:2px dashed #0891b2;background:rgba(8,145,178,.08);display:flex;align-items:center;justify-content:center;color:#0e7490;font-weight:800;cursor:move;resize:both;overflow:auto}
 .section{border-top:1px solid #eceff3;margin-top:16px;padding-top:14px}
 .small{font-size:12px;color:#777;line-height:1.5}
 .thumb{width:100%;max-height:120px;object-fit:contain;background:#f3f4f6;border-radius:8px;margin-top:8px}
@@ -29,7 +31,7 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
 <div class="wrap">
 <section class="panel">
   <h1>템플릿 관리자</h1>
-  <div class="desc">배경 디자인과 레이아웃은 관리자가 만들고, 중개사는 각 글씨의 폰트·색상·크기를 필요에 따라 바꿀 수 있습니다.</div>
+  <div class="desc">분할은 사진 수가 아니라 전체 광고판을 나누는 기능입니다. 각 칸이 하나의 광고 영역입니다.</div>
 
   <label>템플릿</label>
   <select id="tplSelect"></select>
@@ -48,53 +50,43 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
       <option value="portrait">세로버전</option>
     </select>
 
+    <label>전체 광고판 분할</label>
+    <select id="panelSplit">
+      <option value="1">1분할</option>
+      <option value="2">2분할</option>
+      <option value="3">3분할</option>
+      <option value="4">4분할</option>
+      <option value="6">6분할</option>
+    </select>
+    <div class="small">6분할은 가로 3×2, 세로 2×3 구조로 나뉩니다.</div>
+
     <label>배경 디자인 이미지</label>
     <input type="file" id="bgUpload" accept="image/*">
-    <div class="small">가로버전과 세로버전 배경을 각각 업로드합니다.</div>
+    <div class="small">전체 1400×1080 또는 1080×1368 배경을 올립니다.</div>
     <img id="bgThumb" class="thumb" alt="배경 미리보기">
 
-    <div class="row">
-      <div>
-        <label>사진 사용</label>
-        <select id="hasPhoto">
-          <option value="true">사진 있음</option>
-          <option value="false">사진 없음</option>
-        </select>
-      </div>
-      <div>
-        <label>사진 분할</label>
-        <select id="photoSplit">
-          <option value="1">1분할</option><option value="2">2분할</option><option value="3">3분할</option>
-          <option value="4">4분할</option><option value="6">6분할</option>
-        </select>
-      </div>
-    </div>
+    <label>사진 사용</label>
+    <select id="hasPhoto">
+      <option value="true">사진 있음</option>
+      <option value="false">사진 없음</option>
+    </select>
   </div>
 
   <div class="section">
     <strong>선택 글씨 기본값</strong>
-    <div class="small">중개사 화면에 처음 보이는 기본 폰트/색상/크기입니다.</div>
     <label>글씨 종류</label>
     <select id="fontFamily">
-      <option value="Arial">Arial</option>
-      <option value="Noto Sans KR">Noto Sans KR</option>
-      <option value="Pretendard">Pretendard</option>
-      <option value="serif">Serif</option>
-      <option value="sans-serif">Sans Serif</option>
+      <option value="Arial">Arial</option><option value="Noto Sans KR">Noto Sans KR</option>
+      <option value="Pretendard">Pretendard</option><option value="serif">Serif</option><option value="sans-serif">Sans Serif</option>
     </select>
-    <label>글자 크기</label>
-    <input type="number" id="fontSize" min="12" max="160">
-    <label>글자 색상</label>
-    <input type="color" id="fontColor">
+    <label>글자 크기</label><input type="number" id="fontSize" min="10" max="160">
+    <label>글자 색상</label><input type="color" id="fontColor">
     <label>굵기</label>
     <select id="fontWeight">
-      <option value="400">보통</option><option value="700">굵게</option>
-      <option value="800">매우 굵게</option><option value="900">최대 굵게</option>
+      <option value="400">보통</option><option value="700">굵게</option><option value="800">매우 굵게</option><option value="900">최대 굵게</option>
     </select>
     <label>정렬</label>
-    <select id="align">
-      <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
-    </select>
+    <select id="align"><option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option></select>
   </div>
 
   <div class="actions">
@@ -103,101 +95,112 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
   </div>
 </section>
 
-<section class="panel">
-  <div class="canvasbox"><div id="editor"></div></div>
-</section>
+<section class="panel"><div class="canvasbox"><div id="editor"></div></div></section>
 </div>
 
 <script src="templates.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-let templates=JSON.parse(localStorage.getItem('adTemplatesV5')||'null')||JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
+let templates=JSON.parse(localStorage.getItem('adTemplatesV6')||'null')||JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
 let current=null, selectedField=null, dragging=null, offsetX=0, offsetY=0;
 
+function ori(){return $('orientation').value}
+function dims(){return current.orientations[ori()]}
+function ensure(t,o){
+  if(!t.backgrounds)t.backgrounds={landscape:'',portrait:''};
+  if(!t.layoutData)t.layoutData={};
+  if(!t.layoutData[o])t.layoutData[o]={cells:null,cellData:{}};
+}
+function makeCells(split,w,h,o){
+  let cells=[];
+  if(split===1) cells=[{x:0,y:0,w,h}];
+  if(split===2){
+    if(o==='landscape') cells=[{x:0,y:0,w:w/2,h},{x:w/2,y:0,w:w/2,h}];
+    else cells=[{x:0,y:0,w,h:h/2},{x:0,y:h/2,w,h:h/2}];
+  }
+  if(split===3){
+    if(o==='landscape') cells=[0,1,2].map(i=>({x:i*w/3,y:0,w:w/3,h}));
+    else cells=[0,1,2].map(i=>({x:0,y:i*h/3,w,h:h/3}));
+  }
+  if(split===4) cells=[0,1,2,3].map(i=>({x:(i%2)*w/2,y:Math.floor(i/2)*h/2,w:w/2,h:h/2}));
+  if(split===6){
+    if(o==='landscape') cells=[0,1,2,3,4,5].map(i=>({x:(i%3)*w/3,y:Math.floor(i/3)*h/2,w:w/3,h:h/2}));
+    else cells=[0,1,2,3,4,5].map(i=>({x:(i%2)*w/2,y:Math.floor(i/2)*h/3,w:w/2,h:h/3}));
+  }
+  return cells;
+}
 function refreshSelect(){
   $('tplSelect').innerHTML='';
-  templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tplSelect').appendChild(o)});
-  if(current) $('tplSelect').value=current.id;
+  templates.forEach(t=>{const op=document.createElement('option');op.value=t.id;op.textContent=t.name;$('tplSelect').appendChild(op)});
+  if(current)$('tplSelect').value=current.id;
 }
-function ori(){return $('orientation').value}
-function ensure(t,o){
-  if(!t.backgrounds) t.backgrounds={landscape:'',portrait:''};
-  if(!t.layoutData) t.layoutData={};
-  if(!t.layoutData[o]) t.layoutData[o]={photoBoxes:null,fields:{}};
+function baseFieldsForCell(cell){
+  const pad=Math.max(16,cell.w*.04);
+  return [
+    {key:'dealType',label:'매물 구분',x:cell.x+pad,y:cell.y+pad,fontSize:Math.max(18,cell.w*.045),color:'#ffffff',weight:800,align:'left',fontFamily:'Arial'},
+    {key:'propertyName',label:'매물명',x:cell.x+pad,y:cell.y+pad+48,fontSize:Math.max(26,cell.w*.08),color:'#ffffff',weight:900,align:'left',fontFamily:'Arial'},
+    {key:'pyeong',label:'평',x:cell.x+pad,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#ffffff',weight:700,align:'left',fontFamily:'Arial'},
+    {key:'roomsBaths',label:'방·욕실',x:cell.x+cell.w*.42,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#ffffff',weight:700,align:'left',fontFamily:'Arial'},
+    {key:'description',label:'매물설명',x:cell.x+pad,y:cell.y+cell.h*.70,fontSize:Math.max(17,cell.w*.038),color:'#ffffff',weight:700,align:'left',fontFamily:'Arial',maxWidth:cell.w-pad*2,maxLines:2,lineHeight:Math.max(24,cell.w*.05)}
+  ];
 }
-function dims(){return current.orientations[ori()]}
-function genBoxes(split,w,h){
-  const gap=14,pad=30,top=30,uw=w-pad*2,uh=Math.floor(h*.58)-top;let a=[];
-  if(split===1)a=[{x:pad,y:top,w:uw,h:uh}];
-  if(split===2)a=[{x:pad,y:top,w:(uw-gap)/2,h:uh},{x:pad+(uw+gap)/2,y:top,w:(uw-gap)/2,h:uh}];
-  if(split===3)a=[0,1,2].map(i=>({x:pad+i*((uw-2*gap)/3+gap),y:top,w:(uw-2*gap)/3,h:uh}));
-  if(split===4)a=[0,1,2,3].map(i=>({x:pad+(i%2)*((uw-gap)/2+gap),y:top+Math.floor(i/2)*((uh-gap)/2+gap),w:(uw-gap)/2,h:(uh-gap)/2}));
-  if(split===6)a=[0,1,2,3,4,5].map(i=>({x:pad+(i%3)*((uw-2*gap)/3+gap),y:top+Math.floor(i/3)*((uh-gap)/2+gap),w:(uw-2*gap)/3,h:(uh-gap)/2}));
-  return a;
-}
-function applyRect(d,b){d.style.left=b.x+'px';d.style.top=b.y+'px';d.style.width=b.w+'px';d.style.height=b.h+'px'}
-function bindDrag(el,data,isPhoto=false){
-  el.addEventListener('pointerdown',e=>{
-    if(e.target!==el)return;
-    dragging={el,data,isPhoto};const r=el.getBoundingClientRect();offsetX=e.clientX-r.left;offsetY=e.clientY-r.top;el.setPointerCapture(e.pointerId);
-  });
+function bindDrag(el,data){
+  el.addEventListener('pointerdown',e=>{dragging={el,data};const r=el.getBoundingClientRect();offsetX=e.clientX-r.left;offsetY=e.clientY-r.top;el.setPointerCapture(e.pointerId)});
   el.addEventListener('pointermove',e=>{
     if(!dragging||dragging.el!==el)return;
     const er=$('editor').getBoundingClientRect(),sx=$('editor').offsetWidth/er.width,sy=$('editor').offsetHeight/er.height;
-    data.x=Math.max(0,(e.clientX-er.left)*sx-offsetX*sx);data.y=Math.max(0,(e.clientY-er.top)*sy-offsetY*sy);
-    el.style.left=data.x+'px';el.style.top=data.y+'px';
+    data.x=(e.clientX-er.left)*sx-offsetX*sx;data.y=(e.clientY-er.top)*sy-offsetY*sy;el.style.left=data.x+'px';el.style.top=data.y+'px';
   });
-  el.addEventListener('pointerup',()=>{if(dragging&&dragging.el===el&&isPhoto){data.w=el.offsetWidth;data.h=el.offsetHeight}dragging=null});
+  el.addEventListener('pointerup',()=>dragging=null);
 }
-function selectField(data,el){
-  selectedField=data;document.querySelectorAll('.el').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');
-  $('fontFamily').value=data.fontFamily||'Arial';$('fontSize').value=data.fontSize;$('fontColor').value=data.color;$('fontWeight').value=String(data.weight);$('align').value=data.align||'left';
+function selectField(d,el){
+  selectedField=d;document.querySelectorAll('.el').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');
+  $('fontFamily').value=d.fontFamily||'Arial';$('fontSize').value=d.fontSize;$('fontColor').value=d.color;$('fontWeight').value=String(d.weight);$('align').value=d.align||'left';
 }
 function render(){
-  if(!current)return;ensure(current,ori());const d=dims(),scale=Math.min(1,920/d.width,720/d.height),ed=$('editor');
-  ed.style.width=d.width+'px';ed.style.height=d.height+'px';ed.style.transform=`scale(${scale})`;ed.style.backgroundImage=current.backgrounds[ori()]?`url("${current.backgrounds[ori()]}")`:'none';ed.innerHTML='';
+  ensure(current,ori());
+  const d=dims(),scale=Math.min(1,920/d.width,720/d.height),ed=$('editor');
+  ed.style.width=d.width+'px';ed.style.height=d.height+'px';ed.style.transform=`scale(${scale})`;
+  ed.style.backgroundImage=current.backgrounds[ori()]?`url("${current.backgrounds[ori()]}")`:'none';ed.innerHTML='';
   const ld=current.layoutData[ori()];
-  if(current.hasPhoto){
-    if(!ld.photoBoxes||ld.photoBoxes.length!==Number(current.photoSplit))ld.photoBoxes=genBoxes(Number(current.photoSplit),d.width,d.height);
-    ld.photoBoxes.forEach((b,i)=>{const el=document.createElement('div');el.className='photo';el.textContent=`사진 ${i+1}`;applyRect(el,b);ed.appendChild(el);bindDrag(el,b,true)});
-  }
-  current.fields.forEach(f=>{
-    const data={...f,...(ld.fields[f.key]||{})};ld.fields[f.key]=data;
-    const el=document.createElement('div');el.className='el';el.textContent=f.label;el.style.left=data.x+'px';el.style.top=data.y+'px';el.style.fontSize=data.fontSize+'px';
-    el.style.fontWeight=data.weight;el.style.color=data.color;el.style.textAlign=data.align||'left';el.style.fontFamily=data.fontFamily||'Arial';
-    if(data.maxWidth)el.style.width=data.maxWidth+'px';
-    ed.appendChild(el);el.addEventListener('click',e=>{e.stopPropagation();selectField(data,el)});bindDrag(el,data,false);
+  const split=Number(current.panelSplit||1);
+  if(!ld.cells || ld.cells.length!==split) ld.cells=makeCells(split,d.width,d.height,ori());
+  ld.cells.forEach((cell,idx)=>{
+    if(!ld.cellData[idx]) ld.cellData[idx]={fields:baseFieldsForCell(cell),photo:{x:cell.x,y:cell.y,w:cell.w,h:cell.h}};
+    const wrap=document.createElement('div');wrap.className='panelcell';wrap.style.left=cell.x+'px';wrap.style.top=cell.y+'px';wrap.style.width=cell.w+'px';wrap.style.height=cell.h+'px';
+    const num=document.createElement('div');num.className='panelnum';num.textContent=`${idx+1}`;wrap.appendChild(num);ed.appendChild(wrap);
+    if(current.hasPhoto){
+      const p=ld.cellData[idx].photo;
+      const pe=document.createElement('div');pe.className='photo';pe.textContent=`사진 ${idx+1}`;pe.style.left=p.x+'px';pe.style.top=p.y+'px';pe.style.width=p.w+'px';pe.style.height=p.h+'px';ed.appendChild(pe);
+    }
+    ld.cellData[idx].fields.forEach(f=>{
+      const el=document.createElement('div');el.className='el';el.textContent=f.label;el.style.left=f.x+'px';el.style.top=f.y+'px';el.style.fontSize=f.fontSize+'px';el.style.color=f.color;el.style.fontWeight=f.weight;el.style.fontFamily=f.fontFamily||'Arial';el.style.textAlign=f.align||'left';
+      if(f.maxWidth)el.style.width=f.maxWidth+'px';ed.appendChild(el);el.addEventListener('click',e=>{e.stopPropagation();selectField(f,el)});bindDrag(el,f);
+    });
   });
   $('bgThumb').src=current.backgrounds[ori()]||'';
 }
 function load(){
   current=templates.find(t=>t.id===$('tplSelect').value)||templates[0];ensure(current,ori());
-  $('tplName').value=current.name;$('hasPhoto').value=String(current.hasPhoto);$('photoSplit').value=String(current.photoSplit||1);$('photoSplit').disabled=!current.hasPhoto;render();
+  $('tplName').value=current.name;$('panelSplit').value=String(current.panelSplit||1);$('hasPhoto').value=String(current.hasPhoto);render();
 }
 $('tplSelect').addEventListener('change',load);$('orientation').addEventListener('change',load);
 $('tplName').addEventListener('input',()=>{current.name=$('tplName').value;refreshSelect()});
-$('hasPhoto').addEventListener('change',()=>{current.hasPhoto=$('hasPhoto').value==='true';$('photoSplit').disabled=!current.hasPhoto;render()});
-$('photoSplit').addEventListener('change',()=>{current.photoSplit=Number($('photoSplit').value);ensure(current,ori());current.layoutData[ori()].photoBoxes=null;render()});
-$('bgUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{ensure(current,ori());current.backgrounds[ori()]=ev.target.result;render()};r.readAsDataURL(f)});
+$('panelSplit').addEventListener('change',()=>{current.panelSplit=Number($('panelSplit').value);ensure(current,ori());current.layoutData[ori()].cells=null;current.layoutData[ori()].cellData={};render()});
+$('hasPhoto').addEventListener('change',()=>{current.hasPhoto=$('hasPhoto').value==='true';render()});
+$('bgUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{current.backgrounds[ori()]=ev.target.result;render()};r.readAsDataURL(f)});
 $('fontFamily').addEventListener('change',()=>{if(selectedField){selectedField.fontFamily=$('fontFamily').value;render()}});
 $('fontSize').addEventListener('input',()=>{if(selectedField){selectedField.fontSize=Number($('fontSize').value);render()}});
 $('fontColor').addEventListener('input',()=>{if(selectedField){selectedField.color=$('fontColor').value;render()}});
 $('fontWeight').addEventListener('change',()=>{if(selectedField){selectedField.weight=Number($('fontWeight').value);render()}});
 $('align').addEventListener('change',()=>{if(selectedField){selectedField.align=$('align').value;render()}});
 $('newTpl').addEventListener('click',()=>{
-  current={id:'tpl'+Date.now(),name:'새 템플릿',hasPhoto:true,photoSplit:1,backgrounds:{landscape:'',portrait:''},
-  orientations:{landscape:{width:1400,height:1080},portrait:{width:1080,height:1300}},
-  fields:[
-    {key:'dealType',label:'매물 구분',x:70,y:650,fontSize:34,color:'#ffffff',weight:800,align:'left',fontFamily:'Arial'},
-    {key:'propertyName',label:'매물명',x:70,y:710,fontSize:70,color:'#ffffff',weight:900,align:'left',fontFamily:'Arial'},
-    {key:'pyeong',label:'평',x:70,y:855,fontSize:34,color:'#ffffff',weight:700,align:'left',fontFamily:'Arial'},
-    {key:'roomsBaths',label:'방·욕실',x:250,y:855,fontSize:34,color:'#ffffff',weight:700,align:'left',fontFamily:'Arial'},
-    {key:'description',label:'매물설명',x:70,y:920,fontSize:31,color:'#ffffff',weight:700,align:'left',fontFamily:'Arial',maxWidth:1120,maxLines:2,lineHeight:40}
-  ]};templates.push(current);refreshSelect();load()
+  current={id:'tpl'+Date.now(),name:'새 템플릿',hasPhoto:true,panelSplit:1,backgrounds:{landscape:'',portrait:''},orientations:{landscape:{width:1400,height:1080},portrait:{width:1080,height:1368}},fields:[]};
+  templates.push(current);refreshSelect();load();
 });
 $('deleteTpl').addEventListener('click',()=>{if(templates.length<=1)return alert('최소 1개 템플릿은 필요합니다.');templates=templates.filter(t=>t.id!==current.id);current=templates[0];refreshSelect();load()});
-$('saveLocal').addEventListener('click',()=>{localStorage.setItem('adTemplatesV5',JSON.stringify(templates));alert('저장했습니다.')});
-$('exportBtn').addEventListener('click',()=>{const js='window.PUBLISHED_TEMPLATES = '+JSON.stringify(templates,null,2)+';';const blob=new Blob([js],{type:'text/javascript'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='published-templates.js';a.click();URL.revokeObjectURL(a.href)});
+$('saveLocal').addEventListener('click',()=>{localStorage.setItem('adTemplatesV6',JSON.stringify(templates));alert('저장했습니다.')});
+$('exportBtn').addEventListener('click',()=>{const js='window.PUBLISHED_TEMPLATES = '+JSON.stringify(templates,null,2)+';';const blob=new Blob([js],{type:'text/javascript'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='published-templates.js';a.click()});
 refreshSelect();current=templates[0];load();
 </script>
 </body></html>

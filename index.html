@@ -5,11 +5,11 @@
 <title>공인중개사 광고 제작기</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;color:#111}
-.wrap{max-width:1300px;margin:0 auto;padding:20px;display:grid;grid-template-columns:410px 1fr;gap:20px}.panel{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 28px rgba(0,0,0,.06)}
+.wrap{max-width:1320px;margin:0 auto;padding:20px;display:grid;grid-template-columns:430px 1fr;gap:20px}.panel{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 28px rgba(0,0,0,.06)}
 h1{font-size:22px;margin:0 0 6px}.desc{font-size:13px;color:#6b7280;line-height:1.5}label{display:block;font-size:13px;font-weight:800;margin:12px 0 6px}
-input,select,textarea{width:100%;padding:10px;border:1px solid #d9dde3;border-radius:9px;background:#fff}textarea{min-height:82px;resize:vertical}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stylebox{border:1px solid #e5e7eb;border-radius:12px;padding:10px;margin-top:8px;background:#fafafa}
-.stylegrid{display:grid;grid-template-columns:1.3fr .7fr .7fr;gap:7px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #d9dde3;border-radius:9px;background:#fff}textarea{min-height:72px;resize:vertical}
+.cellform{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:14px;background:#fafafa}.celltitle{font-weight:900;margin-bottom:8px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stylegrid{display:grid;grid-template-columns:1.3fr .7fr .7fr;gap:6px;margin-top:7px}
 button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.primary{background:#111;color:#fff;width:100%;margin-top:15px}
 .preview{display:flex;justify-content:center;align-items:flex-start;overflow:auto}canvas{max-width:100%;height:auto;background:#ddd;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
 @media(max-width:950px){.wrap{grid-template-columns:1fr}}
@@ -19,61 +19,12 @@ button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.
 <div class="wrap">
 <section class="panel">
 <h1>매물 광고 제작기</h1>
-<div class="desc">템플릿을 선택하고 매물 정보와 글씨 스타일만 수정하세요.</div>
-
+<div class="desc">분할 수만큼 각각 다른 매물 정보를 입력할 수 있습니다.</div>
 <label>템플릿</label><select id="tpl"></select>
-<label>방향</label>
-<select id="orientation">
-  <option value="landscape">가로버전</option>
-  <option value="portrait">세로버전</option>
-</select>
-
-<div id="photos"></div>
-
-<label>1. 매물 구분</label>
-<select id="dealType">
-  <option value="매매">매매</option><option value="월세">월세</option><option value="전세">전세</option>
-</select>
-<div class="stylebox"><div class="stylegrid">
-  <select id="dealTypeFont"></select><input type="color" id="dealTypeColor"><input type="number" id="dealTypeSize" min="12" max="160">
-</div></div>
-
-<label>2. 매물명</label>
-<input id="propertyName" value="건대입구역 역세권 오피스텔">
-<div class="stylebox"><div class="stylegrid">
-  <select id="propertyNameFont"></select><input type="color" id="propertyNameColor"><input type="number" id="propertyNameSize" min="12" max="160">
-</div></div>
-
-<div class="row">
-  <div>
-    <label>3. 평</label>
-    <input id="pyeong" type="number" value="25" min="0">
-  </div>
-  <div>
-    <label>4. 방 / 욕실</label>
-    <div class="row">
-      <input id="roomCount" type="number" value="2" min="0" placeholder="방">
-      <input id="bathCount" type="number" value="1" min="0" placeholder="욕실">
-    </div>
-  </div>
-</div>
-
-<div class="stylebox"><div class="stylegrid">
-  <select id="pyeongFont"></select><input type="color" id="pyeongColor"><input type="number" id="pyeongSize" min="12" max="160">
-</div></div>
-<div class="stylebox"><div class="stylegrid">
-  <select id="roomsBathsFont"></select><input type="color" id="roomsBathsColor"><input type="number" id="roomsBathsSize" min="12" max="160">
-</div></div>
-
-<label>5. 매물설명</label>
-<textarea id="description">남향으로 채광이 좋고 주차가 편리한 매물입니다.</textarea>
-<div class="stylebox"><div class="stylegrid">
-  <select id="descriptionFont"></select><input type="color" id="descriptionColor"><input type="number" id="descriptionSize" min="12" max="160">
-</div></div>
-
+<label>방향</label><select id="orientation"><option value="landscape">가로버전</option><option value="portrait">세로버전</option></select>
+<div id="forms"></div>
 <button class="primary" id="download">PNG 다운로드</button>
 </section>
-
 <section class="panel preview"><canvas id="canvas" width="1400" height="1080"></canvas></section>
 </div>
 
@@ -81,104 +32,99 @@ button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.
 <script src="published-templates.js"></script>
 <script>
 const $=id=>document.getElementById(id),ctx=$('canvas').getContext('2d');
-let templates=(window.PUBLISHED_TEMPLATES&&window.PUBLISHED_TEMPLATES.length)?window.PUBLISHED_TEMPLATES:DEFAULT_TEMPLATES,imgs=[],bgImg=null;
+let templates=(window.PUBLISHED_TEMPLATES&&window.PUBLISHED_TEMPLATES.length)?window.PUBLISHED_TEMPLATES:DEFAULT_TEMPLATES,bgImg=null,cellImages=[];
 const fonts=['Arial','Noto Sans KR','Pretendard','serif','sans-serif'];
-const keys=['dealType','propertyName','pyeong','roomsBaths','description'];
-
 function cur(){return templates.find(t=>t.id===$('tpl').value)||templates[0]}
-function fillTemplates(){templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tpl').appendChild(o)})}
-function fillFonts(){keys.forEach(k=>{const s=$(k+'Font');fonts.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;s.appendChild(o)})})}
-function styleCfg(key,base){return {
-  fontFamily:$(key+'Font').value||base.fontFamily||'Arial',
-  color:$(key+'Color').value||base.color||'#000000',
-  fontSize:Number($(key+'Size').value)||base.fontSize||30
-}}
-function syncStyles(){
-  const t=cur(),o=$('orientation').value,ld=t.layoutData&&t.layoutData[o];
-  t.fields.forEach(f=>{
-    const d=(ld&&ld.fields&&ld.fields[f.key])?ld.fields[f.key]:f;
-    if(keys.includes(f.key)){
-      $(f.key+'Font').value=d.fontFamily||'Arial';
-      $(f.key+'Color').value=d.color||'#000000';
-      $(f.key+'Size').value=d.fontSize||30;
-    }
-  });
+function fill(){templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tpl').appendChild(o)})}
+function makeCells(split,w,h,o){
+  let cells=[];
+  if(split===1)cells=[{x:0,y:0,w,h}];
+  if(split===2)cells=o==='landscape'?[{x:0,y:0,w:w/2,h},{x:w/2,y:0,w:w/2,h}]:[{x:0,y:0,w,h:h/2},{x:0,y:h/2,w,h:h/2}];
+  if(split===3)cells=o==='landscape'?[0,1,2].map(i=>({x:i*w/3,y:0,w:w/3,h})):[0,1,2].map(i=>({x:0,y:i*h/3,w,h:h/3}));
+  if(split===4)cells=[0,1,2,3].map(i=>({x:(i%2)*w/2,y:Math.floor(i/2)*h/2,w:w/2,h:h/2}));
+  if(split===6)cells=o==='landscape'?[0,1,2,3,4,5].map(i=>({x:(i%3)*w/3,y:Math.floor(i/3)*h/2,w:w/3,h:h/2})):[0,1,2,3,4,5].map(i=>({x:(i%2)*w/2,y:Math.floor(i/2)*h/3,w:w/2,h:h/3}));
+  return cells;
 }
-function setupPhotos(){
-  const t=cur(),box=$('photos');box.innerHTML='';imgs=[];
-  if(!t.hasPhoto)return;
-  for(let i=0;i<t.photoSplit;i++){
-    const l=document.createElement('label');l.textContent=`사진 ${i+1}`;
-    const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-    inp.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const im=new Image();im.onload=()=>{imgs[i]=im;render()};im.src=ev.target.result};r.readAsDataURL(f)});
-    box.appendChild(l);box.appendChild(inp)
-  }
+function baseFields(cell){
+  const pad=Math.max(16,cell.w*.04);
+  return [
+    {key:'dealType',x:cell.x+pad,y:cell.y+pad,fontSize:Math.max(18,cell.w*.045),color:'#fff',weight:800,fontFamily:'Arial'},
+    {key:'propertyName',x:cell.x+pad,y:cell.y+pad+48,fontSize:Math.max(26,cell.w*.08),color:'#fff',weight:900,fontFamily:'Arial'},
+    {key:'pyeong',x:cell.x+pad,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#fff',weight:700,fontFamily:'Arial'},
+    {key:'roomsBaths',x:cell.x+cell.w*.42,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#fff',weight:700,fontFamily:'Arial'},
+    {key:'description',x:cell.x+pad,y:cell.y+cell.h*.70,fontSize:Math.max(17,cell.w*.038),color:'#fff',weight:700,fontFamily:'Arial',maxWidth:cell.w-pad*2,maxLines:2,lineHeight:Math.max(24,cell.w*.05)}
+  ];
+}
+function styleControls(key,idx,base){
+  const wrap=document.createElement('div');wrap.className='stylegrid';
+  const fs=document.createElement('select');fonts.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;fs.appendChild(o)});fs.value=base.fontFamily||'Arial';fs.id=`${key}Font${idx}`;
+  const c=document.createElement('input');c.type='color';c.value=base.color||'#000000';c.id=`${key}Color${idx}`;
+  const s=document.createElement('input');s.type='number';s.min=10;s.max=160;s.value=base.fontSize||24;s.id=`${key}Size${idx}`;
+  [fs,c,s].forEach(el=>el.addEventListener('input',render));wrap.append(fs,c,s);return wrap;
+}
+function setupForms(){
+  const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o],cells=(ld&&ld.cells)||makeCells(t.panelSplit||1,d.width,d.height,o);
+  const box=$('forms');box.innerHTML='';cellImages=[];
+  cells.forEach((cell,idx)=>{
+    const flds=(ld&&ld.cellData&&ld.cellData[idx]&&ld.cellData[idx].fields)||baseFields(cell);
+    const f=document.createElement('div');f.className='cellform';f.innerHTML=`<div class="celltitle">${idx+1}번 매물</div>`;
+    if(t.hasPhoto){
+      const lab=document.createElement('label');lab.textContent='사진';const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+      inp.addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{const im=new Image();im.onload=()=>{cellImages[idx]=im;render()};im.src=ev.target.result};r.readAsDataURL(file)});f.append(lab,inp);
+    }
+    const deal=document.createElement('select');deal.id=`dealType${idx}`;['매매','월세','전세'].forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;deal.appendChild(op)});
+    const name=document.createElement('input');name.id=`propertyName${idx}`;name.value='매물명';
+    const row=document.createElement('div');row.className='row';
+    const py=document.createElement('input');py.type='number';py.id=`pyeong${idx}`;py.value=25;
+    const rb=document.createElement('div');rb.className='row';
+    const room=document.createElement('input');room.type='number';room.id=`room${idx}`;room.value=2;
+    const bath=document.createElement('input');bath.type='number';bath.id=`bath${idx}`;bath.value=1;rb.append(room,bath);row.append(py,rb);
+    const desc=document.createElement('textarea');desc.id=`description${idx}`;desc.value='매물 설명을 입력하세요.';
+    [deal,name,py,room,bath,desc].forEach(el=>el.addEventListener('input',render));
+    f.appendChild(document.createElement('label')).textContent='매물 구분';f.append(deal,styleControls('dealType',idx,flds.find(x=>x.key==='dealType')||{}));
+    f.appendChild(document.createElement('label')).textContent='매물명';f.append(name,styleControls('propertyName',idx,flds.find(x=>x.key==='propertyName')||{}));
+    f.appendChild(document.createElement('label')).textContent='평 / 방 / 욕실';f.append(row,styleControls('pyeong',idx,flds.find(x=>x.key==='pyeong')||{}),styleControls('roomsBaths',idx,flds.find(x=>x.key==='roomsBaths')||{}));
+    f.appendChild(document.createElement('label')).textContent='매물설명';f.append(desc,styleControls('description',idx,flds.find(x=>x.key==='description')||{}));
+    box.appendChild(f);
+  });
 }
 function contain(im,b){
-  const scale=Math.min(b.w/im.width,b.h/im.height);
-  const w=im.width*scale,h=im.height*scale,x=b.x+(b.w-w)/2,y=b.y+(b.h-h)/2;
-  ctx.drawImage(im,x,y,w,h);
+  const sc=Math.min(b.w/im.width,b.h/im.height),w=im.width*sc,h=im.height*sc,x=b.x+(b.w-w)/2,y=b.y+(b.h-h)/2;ctx.drawImage(im,x,y,w,h);
 }
-function fallbackBoxes(split,w,h){
-  const gap=14,pad=30,top=30,uw=w-pad*2,uh=Math.floor(h*.58)-top;let a=[];
-  if(split===1)a=[{x:pad,y:top,w:uw,h:uh}];
-  if(split===2)a=[{x:pad,y:top,w:(uw-gap)/2,h:uh},{x:pad+(uw+gap)/2,y:top,w:(uw-gap)/2,h:uh}];
-  if(split===3)a=[0,1,2].map(i=>({x:pad+i*((uw-2*gap)/3+gap),y:top,w:(uw-2*gap)/3,h:uh}));
-  if(split===4)a=[0,1,2,3].map(i=>({x:pad+(i%2)*((uw-gap)/2+gap),y:top+Math.floor(i/2)*((uh-gap)/2+gap),w:(uw-gap)/2,h:(uh-gap)/2}));
-  if(split===6)a=[0,1,2,3,4,5].map(i=>({x:pad+(i%3)*((uw-2*gap)/3+gap),y:top+Math.floor(i/3)*((uh-gap)/2+gap),w:(uw-2*gap)/3,h:(uh-gap)/2}));
-  return a
+function drawWrapped(text,cfg,idx){
+  const font=document.getElementById(`descriptionFont${idx}`).value,size=Number(document.getElementById(`descriptionSize${idx}`).value),color=document.getElementById(`descriptionColor${idx}`).value;
+  ctx.font=`${cfg.weight||700} ${size}px "${font}"`;ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
+  const mw=cfg.maxWidth||400,lh=cfg.lineHeight||size*1.25;let line='',lines=[];
+  for(const ch of [...text]){const test=line+ch;if(ctx.measureText(test).width>mw&&line){lines.push(line);line=ch}else line=test}if(line)lines.push(line);
+  lines.slice(0,2).forEach((ln,i)=>ctx.fillText(ln,cfg.x,cfg.y+i*lh));
 }
-function drawWrapped(text,cfg,maxLines=2){
-  const style=styleCfg(cfg.key,cfg);
-  ctx.font=`${cfg.weight||700} ${style.fontSize}px "${style.fontFamily}"`;
-  ctx.fillStyle=style.color;ctx.textAlign=cfg.align||'left';ctx.textBaseline='top';
-  const maxWidth=cfg.maxWidth||800,lineHeight=cfg.lineHeight||Math.round(style.fontSize*1.25);
-  const chars=[...text];let line='',lines=[];
-  for(const ch of chars){
-    const test=line+ch;
-    if(ctx.measureText(test).width>maxWidth && line){lines.push(line);line=ch}else line=test;
-  }
-  if(line)lines.push(line);
-  lines.slice(0,maxLines).forEach((ln,i)=>ctx.fillText(ln,cfg.x,cfg.y+i*lineHeight));
+function drawSimple(text,cfg,key,idx){
+  const font=document.getElementById(`${key}Font${idx}`).value,size=Number(document.getElementById(`${key}Size${idx}`).value),color=document.getElementById(`${key}Color${idx}`).value;
+  ctx.font=`${cfg.weight||700} ${size}px "${font}"`;ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';ctx.fillText(text,cfg.x,cfg.y);
 }
-function drawField(text,cfg){
-  const style=styleCfg(cfg.key,cfg);
-  ctx.font=`${cfg.weight||700} ${style.fontSize}px "${style.fontFamily}"`;
-  ctx.fillStyle=style.color;ctx.textAlign=cfg.align||'left';ctx.textBaseline='top';ctx.fillText(text,cfg.x,cfg.y);
-}
-function loadBgThenRender(){
+function loadBg(){
   const t=cur(),o=$('orientation').value,src=t.backgrounds&&t.backgrounds[o];
   if(!src){bgImg=null;render();return}
-  const im=new Image();im.onload=()=>{bgImg=im;render()};im.src=src
+  const im=new Image();im.onload=()=>{bgImg=im;render()};im.src=src;
 }
 function render(){
-  const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o];
+  const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o],cells=(ld&&ld.cells)||makeCells(t.panelSplit||1,d.width,d.height,o);
   $('canvas').width=d.width;$('canvas').height=d.height;ctx.fillStyle='#fff';ctx.fillRect(0,0,d.width,d.height);
-
-  const pbs=(ld&&ld.photoBoxes)||fallbackBoxes(t.photoSplit||1,d.width,d.height);
-  if(t.hasPhoto)pbs.forEach((b,i)=>{ctx.save();ctx.beginPath();ctx.rect(b.x,b.y,b.w,b.h);ctx.clip();if(imgs[i])contain(imgs[i],b);ctx.restore()});
-
+  cells.forEach((cell,idx)=>{
+    if(t.hasPhoto&&cellImages[idx]){ctx.save();ctx.beginPath();ctx.rect(cell.x,cell.y,cell.w,cell.h);ctx.clip();contain(cellImages[idx],cell);ctx.restore()}
+  });
   if(bgImg)ctx.drawImage(bgImg,0,0,d.width,d.height);
-
-  const vals={
-    dealType:$('dealType').value,
-    propertyName:$('propertyName').value,
-    pyeong:$('pyeong').value ? $('pyeong').value+'평' : '',
-    roomsBaths:`방 ${$('roomCount').value||0} / 욕실 ${$('bathCount').value||0}`,
-    description:$('description').value
-  };
-
-  t.fields.forEach(f=>{
-    const x=(ld&&ld.fields&&ld.fields[f.key])?{...f,...ld.fields[f.key]}:f;x.key=f.key;
-    if(f.key==='description')drawWrapped(vals[f.key]||'',x,2);else drawField(vals[f.key]||'',x);
+  cells.forEach((cell,idx)=>{
+    const flds=(ld&&ld.cellData&&ld.cellData[idx]&&ld.cellData[idx].fields)||baseFields(cell),fm=Object.fromEntries(flds.map(f=>[f.key,f]));
+    drawSimple(document.getElementById(`dealType${idx}`).value,fm.dealType,'dealType',idx);
+    drawSimple(document.getElementById(`propertyName${idx}`).value,fm.propertyName,'propertyName',idx);
+    drawSimple((document.getElementById(`pyeong${idx}`).value||'')+'평',fm.pyeong,'pyeong',idx);
+    drawSimple(`방 ${document.getElementById(`room${idx}`).value||0} / 욕실 ${document.getElementById(`bath${idx}`).value||0}`,fm.roomsBaths,'roomsBaths',idx);
+    drawWrapped(document.getElementById(`description${idx}`).value,fm.description,idx);
   });
 }
-$('tpl').addEventListener('change',()=>{setupPhotos();syncStyles();loadBgThenRender()});
-$('orientation').addEventListener('change',()=>{setupPhotos();syncStyles();loadBgThenRender()});
-['dealType','propertyName','pyeong','roomCount','bathCount','description'].forEach(id=>$(id).addEventListener('input',render));
-keys.forEach(k=>[$(k+'Font'),$(k+'Color'),$(k+'Size')].forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)}));
+$('tpl').addEventListener('change',()=>{setupForms();loadBg()});$('orientation').addEventListener('change',()=>{setupForms();loadBg()});
 $('download').addEventListener('click',()=>{render();const a=document.createElement('a');a.download='realestate_ad.png';a.href=$('canvas').toDataURL('image/png');a.click()});
-
-fillTemplates();fillFonts();setupPhotos();syncStyles();loadBgThenRender();
+fill();setupForms();loadBg();
 </script>
 </body></html>
