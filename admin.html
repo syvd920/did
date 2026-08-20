@@ -21,7 +21,7 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
 .panelnum{position:absolute;top:4px;right:5px;font-size:14px;color:#6d28d9;font-weight:900;background:rgba(255,255,255,.8);padding:2px 5px;border-radius:5px}
 .el{position:absolute;border:1px dashed transparent;cursor:move;user-select:none;padding:2px 4px;white-space:pre-wrap}
 .el.selected{border-color:#2563eb;background:rgba(37,99,235,.08)}
-.shape{position:absolute;cursor:move;box-sizing:border-box;resize:both;overflow:hidden}.shape.selected{outline:2px dashed #2563eb;outline-offset:2px}
+.shape{position:absolute;cursor:move;box-sizing:border-box;overflow:hidden;touch-action:none}.shape.selected{outline:2px dashed #2563eb;outline-offset:2px}.shape::after{content:'';position:absolute;right:0;bottom:0;width:20px;height:20px;background:rgba(37,99,235,.75);clip-path:polygon(100% 0,100% 100%,0 100%);cursor:nwse-resize}
 .photo{position:absolute;border:2px dashed #0891b2;background:rgba(8,145,178,.08);display:flex;align-items:center;justify-content:center;color:#0e7490;font-weight:800;cursor:move;overflow:hidden}.photo::after{content:'';position:absolute;right:0;bottom:0;width:18px;height:18px;background:rgba(8,145,178,.65);clip-path:polygon(100% 0,100% 100%,0 100%);cursor:nwse-resize}
 .section{border-top:1px solid #eceff3;margin-top:16px;padding-top:14px}
 .small{font-size:12px;color:#777;line-height:1.5}
@@ -329,23 +329,62 @@ function bindPhotoDragResize(el,data,cell){
 
 
 function bindShape(el,s){
+  let action=null,startX=0,startY=0,startLeft=0,startTop=0,startW=0,startH=0;
+
   el.addEventListener('pointerdown',e=>{
-    selectedShape=s;selectedField=null;
-    document.querySelectorAll('.shape').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');
-    $('shapeControls').style.display='block';$('shapeColor').value=s.color;$('shapeOpacity').value=s.opacity;$('shapeRadius').value=s.radius;$('shapeBorderColor').value=s.borderColor;$('shapeBorderWidth').value=s.borderWidth;
-    const er=$('editor').getBoundingClientRect(),r=el.getBoundingClientRect(),sx=$('editor').offsetWidth/er.width,sy=$('editor').offsetHeight/er.height;
-    const ox=(e.clientX-r.left)*sx,oy=(e.clientY-r.top)*sy;
-    const move=ev=>{
-      let nx=(ev.clientX-er.left)*sx-ox,ny=(ev.clientY-er.top)*sy-oy;
-      nx=Math.max(0,Math.min(nx,$('editor').offsetWidth-el.offsetWidth));ny=Math.max(0,Math.min(ny,$('editor').offsetHeight-el.offsetHeight));
-      s.x=nx;s.y=ny;el.style.left=nx+'px';el.style.top=ny+'px';
-    };
-    const up=()=>{s.w=el.offsetWidth;s.h=el.offsetHeight;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up)};
-    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+    selectedShape=s;
+    selectedField=null;
+    document.querySelectorAll('.shape').forEach(x=>x.classList.remove('selected'));
+    el.classList.add('selected');
+    $('shapeControls').style.display='block';
+    $('shapeColor').value=s.color||'#ffffff';
+    $('shapeOpacity').value=s.opacity??1;
+    $('shapeRadius').value=s.radius??20;
+    $('shapeBorderColor').value=s.borderColor||'#000000';
+    $('shapeBorderWidth').value=s.borderWidth??0;
+
+    const r=el.getBoundingClientRect();
+    const resizeZone=22;
+    action=((r.right-e.clientX)<=resizeZone && (r.bottom-e.clientY)<=resizeZone)?'resize':'move';
+
+    startX=e.clientX; startY=e.clientY;
+    startLeft=s.x; startTop=s.y; startW=s.w; startH=s.h;
+    el.setPointerCapture(e.pointerId);
+    e.preventDefault();
     e.stopPropagation();
   });
-}
 
+  el.addEventListener('pointermove',e=>{
+    if(!action || !el.hasPointerCapture(e.pointerId)) return;
+    const editor=$('editor');
+    const er=editor.getBoundingClientRect();
+    const sx=editor.offsetWidth/er.width;
+    const sy=editor.offsetHeight/er.height;
+    const dx=(e.clientX-startX)*sx;
+    const dy=(e.clientY-startY)*sy;
+
+    if(action==='move'){
+      let nx=startLeft+dx, ny=startTop+dy;
+      nx=Math.max(0,Math.min(nx,editor.offsetWidth-s.w));
+      ny=Math.max(0,Math.min(ny,editor.offsetHeight-s.h));
+      s.x=nx; s.y=ny;
+      el.style.left=nx+'px'; el.style.top=ny+'px';
+    }else{
+      let nw=Math.max(30,startW+dx), nh=Math.max(30,startH+dy);
+      nw=Math.min(nw,editor.offsetWidth-s.x);
+      nh=Math.min(nh,editor.offsetHeight-s.y);
+      s.w=nw; s.h=nh;
+      el.style.width=nw+'px'; el.style.height=nh+'px';
+    }
+  });
+
+  const finish=e=>{
+    if(action && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    action=null;
+  };
+  el.addEventListener('pointerup',finish);
+  el.addEventListener('pointercancel',finish);
+}
 function render(){
   ensure(current,ori());
   const d=dims(),scale=Math.min(1,920/d.width,720/d.height),ed=$('editor');
