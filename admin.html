@@ -122,7 +122,8 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
 
   <div class="actions">
     <button class="primary" id="saveLocal">이 브라우저에 저장</button>
-    <button class="secondary" id="exportBtn">템플릿 파일 내보내기</button>
+    <button class="secondary" id="exportBtn">현재 템플릿 내보내기</button>
+    <button class="secondary" id="exportAllBtn" style="grid-column:1/-1">전체 템플릿 내보내기</button>
   </div>
 </section>
 
@@ -211,6 +212,15 @@ function makeCells(split,w,h,o){
   }
   return cells;
 }
+function safeFileName(name){
+  return String(name||'template')
+    .trim()
+    .replace(/[\\/:*?"<>|]/g,'_')
+    .replace(/\s+/g,'_')
+    .replace(/_+/g,'_');
+}
+function orientationLabel(o){return o==='landscape'?'가로':'세로';}
+
 function refreshSelect(){
   $('tplSelect').innerHTML='';
   templates.forEach(t=>{const op=document.createElement('option');op.value=t.id;op.textContent=t.name;$('tplSelect').appendChild(op)});
@@ -219,12 +229,12 @@ function refreshSelect(){
 function baseFieldsForCell(cell){
   const pad=Math.max(16,cell.w*.04);
   return [
-    {key:'dealType',label:'매물 구분',x:cell.x+pad,y:cell.y+pad,fontSize:Math.max(18,cell.w*.045),color:'#ffffff',weight:800,align:'left',fontFamily:'Arial'},
-    {key:'propertyName',label:'매물명',x:cell.x+pad,y:cell.y+pad+48,fontSize:Math.max(26,cell.w*.08),color:'#ffffff',weight:900,align:'left',fontFamily:'Arial'},
-    {key:'price',label:'매물금액',x:cell.x+pad,y:cell.y+pad+105,fontSize:Math.max(22,cell.w*.055),color:'#ffd54a',weight:900,align:'left',fontFamily:'Arial'},
-    {key:'pyeong',label:'평',x:cell.x+pad,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#ffffff',weight:700,align:'left',fontFamily:'Arial'},
-    {key:'roomsBaths',label:'방·욕실',x:cell.x+cell.w*.42,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#ffffff',weight:700,align:'left',fontFamily:'Arial'},
-    {key:'description',label:'매물설명',x:cell.x+pad,y:cell.y+cell.h*.70,fontSize:Math.max(17,cell.w*.038),color:'#ffffff',weight:700,align:'left',fontFamily:'Arial',maxWidth:cell.w-pad*2,maxLines:2,lineHeight:Math.max(24,cell.w*.05)}
+    {key:'dealType',label:'매물 구분',x:cell.x+pad,y:cell.y+pad,fontSize:Math.max(18,cell.w*.045),color:'#000000',weight:800,align:'left',fontFamily:'Arial'},
+    {key:'propertyName',label:'매물명',x:cell.x+pad,y:cell.y+pad+48,fontSize:Math.max(26,cell.w*.08),color:'#000000',weight:900,align:'left',fontFamily:'Arial'},
+    {key:'price',label:'매물금액',x:cell.x+pad,y:cell.y+pad+105,fontSize:Math.max(22,cell.w*.055),color:'#000000',weight:900,align:'left',fontFamily:'Arial'},
+    {key:'pyeong',label:'평',x:cell.x+pad,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#000000',weight:700,align:'left',fontFamily:'Arial'},
+    {key:'roomsBaths',label:'방·욕실',x:cell.x+cell.w*.42,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#000000',weight:700,align:'left',fontFamily:'Arial'},
+    {key:'description',label:'매물설명',x:cell.x+pad,y:cell.y+cell.h*.70,fontSize:Math.max(17,cell.w*.038),color:'#000000',weight:700,align:'left',fontFamily:'Arial',maxWidth:cell.w-pad*2,maxLines:2,lineHeight:Math.max(24,cell.w*.05)}
   ];
 }
 function bindDrag(el,data){
@@ -425,11 +435,32 @@ $('newTpl').addEventListener('click',()=>{
   templates.push(current);refreshSelect();load();
 });
 $('deleteTpl').addEventListener('click',()=>{if(templates.length<=1)return alert('최소 1개 템플릿은 필요합니다.');templates=templates.filter(t=>t.id!==current.id);current=templates[0];refreshSelect();load()});
-$('addRoundedRect').addEventListener('click',()=>{ensure(current,ori());const d=dims();const s={x:d.width*.35,y:d.height*.4,w:d.width*.3,h:d.height*.12,color:'#ffffff',opacity:1,radius:20,borderColor:'#000000',borderWidth:0};current.layoutData[ori()].shapes.push(s);selectedShape=s;render()});
+$('addRoundedRect').addEventListener('click',()=>{ensure(current,ori());const d=dims();const s={x:d.width*.35,y:d.height*.4,w:d.width*.3,h:d.height*.12,color:'#000000',opacity:1,radius:20,borderColor:'#000000',borderWidth:0};current.layoutData[ori()].shapes.push(s);selectedShape=s;render()});
 [['shapeColor','color'],['shapeOpacity','opacity'],['shapeRadius','radius'],['shapeBorderColor','borderColor'],['shapeBorderWidth','borderWidth']].forEach(([id,key])=>$(id).addEventListener('input',()=>{if(selectedShape){selectedShape[key]=(key==='color'||key==='borderColor')?$(id).value:Number($(id).value);render()}}));
 $('deleteShape').addEventListener('click',()=>{if(!selectedShape)return;const a=current.layoutData[ori()].shapes;current.layoutData[ori()].shapes=a.filter(x=>x!==selectedShape);selectedShape=null;$('shapeControls').style.display='none';render()});
 $('saveLocal').addEventListener('click',()=>{localStorage.setItem('adTemplatesV8',JSON.stringify(templates));alert('저장했습니다.')});
-$('exportBtn').addEventListener('click',()=>{const js='window.PUBLISHED_TEMPLATES = '+JSON.stringify(templates,null,2)+';';const blob=new Blob([js],{type:'text/javascript'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='published-templates.js';a.click()});
+$('exportBtn').addEventListener('click',()=>{
+  const o=ori();
+  const single=JSON.parse(JSON.stringify(current));
+  // 현재 선택 방향만 사용 가능하도록 내보내기
+  single.availableOrientations={landscape:o==='landscape',portrait:o==='portrait'};
+  const js='window.PUBLISHED_TEMPLATES = '+JSON.stringify([single],null,2)+';';
+  const blob=new Blob([js],{type:'text/javascript'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${safeFileName(current.name)}_${orientationLabel(o)}_${current.panelSplit||1}분할.js`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$('exportAllBtn').addEventListener('click',()=>{
+  const js='window.PUBLISHED_TEMPLATES = '+JSON.stringify(templates,null,2)+';';
+  const blob=new Blob([js],{type:'text/javascript'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='published-templates-all.js';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 refreshSelect();current=templates[0];load();
 </script>
 </body></html>

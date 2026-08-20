@@ -134,17 +134,17 @@ function makeCells(split,w,h,o){
 function baseFields(cell){
   const pad=Math.max(16,cell.w*.04);
   return [
-    {key:'dealType',x:cell.x+pad,y:cell.y+pad,fontSize:Math.max(18,cell.w*.045),color:'#fff',weight:800,fontFamily:'Arial'},
-    {key:'propertyName',x:cell.x+pad,y:cell.y+pad+48,fontSize:Math.max(26,cell.w*.08),color:'#fff',weight:900,fontFamily:'Arial'},
-    {key:'price',x:cell.x+pad,y:cell.y+pad+105,fontSize:Math.max(22,cell.w*.055),color:'#ffd54a',weight:900,fontFamily:'Arial'},
-    {key:'pyeong',x:cell.x+pad,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#fff',weight:700,fontFamily:'Arial'},
-    {key:'roomsBaths',x:cell.x+cell.w*.42,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#fff',weight:700,fontFamily:'Arial'},
-    {key:'description',x:cell.x+pad,y:cell.y+cell.h*.70,fontSize:Math.max(17,cell.w*.038),color:'#fff',weight:700,fontFamily:'Arial',maxWidth:cell.w-pad*2,maxLines:2,lineHeight:Math.max(24,cell.w*.05)}
+    {key:'dealType',x:cell.x+pad,y:cell.y+pad,fontSize:Math.max(18,cell.w*.045),color:'#000000',weight:800,fontFamily:'Arial'},
+    {key:'propertyName',x:cell.x+pad,y:cell.y+pad+48,fontSize:Math.max(26,cell.w*.08),color:'#000000',weight:900,fontFamily:'Arial'},
+    {key:'price',x:cell.x+pad,y:cell.y+pad+105,fontSize:Math.max(22,cell.w*.055),color:'#000000',weight:900,fontFamily:'Arial'},
+    {key:'pyeong',x:cell.x+pad,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#000000',weight:700,fontFamily:'Arial'},
+    {key:'roomsBaths',x:cell.x+cell.w*.42,y:cell.y+cell.h*.58,fontSize:Math.max(18,cell.w*.043),color:'#000000',weight:700,fontFamily:'Arial'},
+    {key:'description',x:cell.x+pad,y:cell.y+cell.h*.70,fontSize:Math.max(17,cell.w*.038),color:'#000000',weight:700,fontFamily:'Arial',maxWidth:cell.w-pad*2,maxLines:2,lineHeight:Math.max(24,cell.w*.05)}
   ];
 }
 function styleControls(key,idx,base){
   const wrap=document.createElement('div');wrap.className='stylegrid';
-  const c=document.createElement('input');c.type='color';c.value='#000000';c.id=`${key}Color${idx}`;
+  const c=document.createElement('input');c.type='color';c.value=base.color||'#000000';c.id=`${key}Color${idx}`;
   const s=document.createElement('input');s.type='number';s.min=10;s.max=160;s.value=base.fontSize||24;s.id=`${key}Size${idx}`;
   c.addEventListener('input',render);s.addEventListener('input',render);
   wrap.append(c,s);
