@@ -39,10 +39,37 @@ function fill(){templates.forEach(t=>{const o=document.createElement('option');o
 function makeCells(split,w,h,o){
   let cells=[];
   if(split===1)cells=[{x:0,y:0,w,h}];
-  if(split===2)cells=o==='landscape'?[{x:0,y:0,w:w/2,h},{x:w/2,y:0,w:w/2,h}]:[{x:0,y:0,w,h:h/2},{x:0,y:h/2,w,h:h/2}];
-  if(split===3)cells=o==='landscape'?[0,1,2].map(i=>({x:i*w/3,y:0,w:w/3,h})):[0,1,2].map(i=>({x:0,y:i*h/3,w,h:h/3}));
-  if(split===4)cells=[0,1,2,3].map(i=>({x:(i%2)*w/2,y:Math.floor(i/2)*h/2,w:w/2,h:h/2}));
-  if(split===6)cells=o==='landscape'?[0,1,2,3,4,5].map(i=>({x:(i%3)*w/3,y:Math.floor(i/3)*h/2,w:w/3,h:h/2})):[0,1,2,3,4,5].map(i=>({x:(i%2)*w/2,y:Math.floor(i/2)*h/3,w:w/2,h:h/3}));
+
+  if(split===2){
+    cells=o==='landscape'
+      ? [{x:0,y:0,w:w/2,h},{x:w/2,y:0,w:w/2,h}]
+      : [{x:0,y:0,w,h:h/2},{x:0,y:h/2,w,h:h/2}];
+  }
+
+  if(split===3){
+    const topH=h*(2/3);
+    const bottomH=h-topH;
+    cells=[
+      {x:0,y:0,w:w,h:topH},
+      {x:0,y:topH,w:w/2,h:bottomH},
+      {x:w/2,y:topH,w:w/2,h:bottomH}
+    ];
+  }
+
+  if(split===4){
+    cells=[0,1,2,3].map(i=>({
+      x:(i%2)*w/2,
+      y:Math.floor(i/2)*h/2,
+      w:w/2,
+      h:h/2
+    }));
+  }
+
+  if(split===6){
+    cells=o==='landscape'
+      ? [0,1,2,3,4,5].map(i=>({x:(i%3)*w/3,y:Math.floor(i/3)*h/2,w:w/3,h:h/2}))
+      : [0,1,2,3,4,5].map(i=>({x:(i%2)*w/2,y:Math.floor(i/2)*h/3,w:w/2,h:h/3}));
+  }
   return cells;
 }
 function baseFields(cell){
