@@ -34,7 +34,11 @@ button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.
 const $=id=>document.getElementById(id),ctx=$('canvas').getContext('2d');
 let templates=(window.PUBLISHED_TEMPLATES&&window.PUBLISHED_TEMPLATES.length)?window.PUBLISHED_TEMPLATES:DEFAULT_TEMPLATES,bgImg=null,cellImages=[];
 const fonts=['Arial','Noto Sans KR','Pretendard','serif','sans-serif'];
-function cur(){return templates.find(t=>t.id===$('tpl').value)||templates[0]}
+function cur(){
+  const t=templates.find(t=>t.id===$('tpl').value)||templates[0];
+  if(!t.enabledFields)t.enabledFields={dealType:true,propertyName:true,pyeong:true,roomsBaths:true,description:true};
+  return t;
+}
 function fill(){templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tpl').appendChild(o)})}
 function makeCells(split,w,h,o){
   let cells=[];
@@ -102,20 +106,32 @@ function setupForms(){
     const deal=document.createElement('select');deal.id=`dealType${idx}`;['매매','월세','전세'].forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;deal.appendChild(op)});
     const name=document.createElement('input');name.id=`propertyName${idx}`;name.value='매물명';
     const row=document.createElement('div');row.className='row';
-    const showPy=document.createElement('input');showPy.type='checkbox';showPy.checked=true;showPy.id=`showPyeong${idx}`;showPy.style.width='auto';
-    const showRB=document.createElement('input');showRB.type='checkbox';showRB.checked=true;showRB.id=`showRoomsBaths${idx}`;showRB.style.width='auto';
     const py=document.createElement('input');py.type='number';py.id=`pyeong${idx}`;py.value=25;
     const rb=document.createElement('div');rb.className='row';
     const room=document.createElement('input');room.type='number';room.id=`room${idx}`;room.value=2;
     const bath=document.createElement('input');bath.type='number';bath.id=`bath${idx}`;bath.value=1;rb.append(room,bath);row.append(py,rb);
     const desc=document.createElement('textarea');desc.id=`description${idx}`;desc.value='매물 설명을 입력하세요.';
-    [deal,name,py,room,bath,desc,showPy,showRB].forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});
-    f.appendChild(document.createElement('label')).textContent='매물 구분';f.append(deal,styleControls('dealType',idx,flds.find(x=>x.key==='dealType')||{}));
-    f.appendChild(document.createElement('label')).textContent='매물명';f.append(name,styleControls('propertyName',idx,flds.find(x=>x.key==='propertyName')||{}));
-    const pyLabel=document.createElement('label');pyLabel.style.display='flex';pyLabel.style.alignItems='center';pyLabel.style.gap='8px';pyLabel.append(showPy,document.createTextNode('평 표시'));
-    const rbLabel=document.createElement('label');rbLabel.style.display='flex';rbLabel.style.alignItems='center';rbLabel.style.gap='8px';rbLabel.append(showRB,document.createTextNode('방 / 욕실 표시'));
-    f.append(pyLabel,py,styleControls('pyeong',idx,flds.find(x=>x.key==='pyeong')||{}),rbLabel,rb,styleControls('roomsBaths',idx,flds.find(x=>x.key==='roomsBaths')||{}));
-    f.appendChild(document.createElement('label')).textContent='매물설명';f.append(desc,styleControls('description',idx,flds.find(x=>x.key==='description')||{}));
+    [deal,name,py,room,bath,desc].forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});
+    if(t.enabledFields.dealType!==false){
+      const l=document.createElement('label');l.textContent='매물 구분';
+      f.append(l,deal,styleControls('dealType',idx,flds.find(x=>x.key==='dealType')||{}));
+    }
+    if(t.enabledFields.propertyName!==false){
+      const l=document.createElement('label');l.textContent='매물명';
+      f.append(l,name,styleControls('propertyName',idx,flds.find(x=>x.key==='propertyName')||{}));
+    }
+    if(t.enabledFields.pyeong!==false){
+      const l=document.createElement('label');l.textContent='평';
+      f.append(l,py,styleControls('pyeong',idx,flds.find(x=>x.key==='pyeong')||{}));
+    }
+    if(t.enabledFields.roomsBaths!==false){
+      const l=document.createElement('label');l.textContent='방 / 욕실';
+      f.append(l,rb,styleControls('roomsBaths',idx,flds.find(x=>x.key==='roomsBaths')||{}));
+    }
+    if(t.enabledFields.description!==false){
+      const l=document.createElement('label');l.textContent='매물설명';
+      f.append(l,desc,styleControls('description',idx,flds.find(x=>x.key==='description')||{}));
+    }
     box.appendChild(f);
   });
 }
@@ -188,11 +204,11 @@ function render(){
   if(bgImg)ctx.drawImage(bgImg,0,0,d.width,d.height);
   cells.forEach((cell,idx)=>{
     const flds=(ld&&ld.cellData&&ld.cellData[idx]&&ld.cellData[idx].fields)||baseFields(cell),fm=Object.fromEntries(flds.map(f=>[f.key,f]));
-    drawSimple(document.getElementById(`dealType${idx}`).value,fm.dealType,'dealType',idx);
-    drawSimple(document.getElementById(`propertyName${idx}`).value,fm.propertyName,'propertyName',idx);
-    if(document.getElementById(`showPyeong${idx}`)?.checked) drawSimple((document.getElementById(`pyeong${idx}`).value||'')+'평',fm.pyeong,'pyeong',idx);
-    if(document.getElementById(`showRoomsBaths${idx}`)?.checked) drawSimple(`방 ${document.getElementById(`room${idx}`).value||0} / 욕실 ${document.getElementById(`bath${idx}`).value||0}`,fm.roomsBaths,'roomsBaths',idx);
-    drawWrapped(document.getElementById(`description${idx}`).value,fm.description,idx);
+    if(t.enabledFields.dealType!==false) drawSimple(document.getElementById(`dealType${idx}`).value,fm.dealType,'dealType',idx);
+    if(t.enabledFields.propertyName!==false) drawSimple(document.getElementById(`propertyName${idx}`).value,fm.propertyName,'propertyName',idx);
+    if(t.enabledFields.pyeong!==false) drawSimple((document.getElementById(`pyeong${idx}`).value||'')+'평',fm.pyeong,'pyeong',idx);
+    if(t.enabledFields.roomsBaths!==false) drawSimple(`방 ${document.getElementById(`room${idx}`).value||0} / 욕실 ${document.getElementById(`bath${idx}`).value||0}`,fm.roomsBaths,'roomsBaths',idx);
+    if(t.enabledFields.description!==false) drawWrapped(document.getElementById(`description${idx}`).value,fm.description,idx);
   });
 }
 $('tpl').addEventListener('change',()=>{setupForms();loadBg()});$('orientation').addEventListener('change',()=>{setupForms();loadBg()});

@@ -73,6 +73,16 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
   </div>
 
   <div class="section">
+    <strong>템플릿 사용 항목</strong>
+    <div class="small">이 템플릿에서 사용하지 않는 항목은 끄세요. OFF 항목은 관리자 캔버스와 중개사 입력 화면에서 모두 숨겨집니다.</div>
+    <label><input type="checkbox" id="useDealType" style="width:auto;margin-right:7px">매물 구분 사용</label>
+    <label><input type="checkbox" id="usePropertyName" style="width:auto;margin-right:7px">매물명 사용</label>
+    <label><input type="checkbox" id="usePyeong" style="width:auto;margin-right:7px">평 사용</label>
+    <label><input type="checkbox" id="useRoomsBaths" style="width:auto;margin-right:7px">방·욕실 사용</label>
+    <label><input type="checkbox" id="useDescription" style="width:auto;margin-right:7px">매물설명 사용</label>
+  </div>
+
+  <div class="section">
     <strong>선택 글씨 기본값</strong>
     <label>글씨 종류</label>
     <select id="fontFamily">
@@ -104,9 +114,26 @@ const $=id=>document.getElementById(id);
 let templates=JSON.parse(localStorage.getItem('adTemplatesV8')||'null')||JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
 let current=null, selectedField=null, dragging=null, offsetX=0, offsetY=0;
 
+const usageMap={
+  dealType:'useDealType',
+  propertyName:'usePropertyName',
+  pyeong:'usePyeong',
+  roomsBaths:'useRoomsBaths',
+  description:'useDescription'
+};
+function ensureUsage(t){
+  if(!t.enabledFields)t.enabledFields={dealType:true,propertyName:true,pyeong:true,roomsBaths:true,description:true};
+  Object.keys(usageMap).forEach(k=>{if(t.enabledFields[k]===undefined)t.enabledFields[k]=true});
+}
+function syncUsageControls(){
+  ensureUsage(current);
+  Object.entries(usageMap).forEach(([k,id])=>{$(id).checked=current.enabledFields[k]!==false});
+}
+
 function ori(){return $('orientation').value}
 function dims(){return current.orientations[ori()]}
 function ensure(t,o){
+  ensureUsage(t);
   if(!t.backgrounds)t.backgrounds={landscape:'',portrait:''};
   if(!t.layoutData)t.layoutData={};
   if(!t.layoutData[o])t.layoutData[o]={cells:null,cellData:{}};
@@ -292,7 +319,7 @@ function render(){
       ed.appendChild(pe);
       bindPhotoDragResize(pe,p,cell);
     }
-    ld.cellData[idx].fields.forEach(f=>{
+    ld.cellData[idx].fields.filter(f=>current.enabledFields[f.key]!==false).forEach(f=>{
       const el=document.createElement('div');el.className='el';el.textContent=f.label;el.style.left=f.x+'px';el.style.top=f.y+'px';el.style.fontSize=f.fontSize+'px';el.style.color=f.color;el.style.fontWeight=f.weight;el.style.fontFamily=f.fontFamily||'Arial';el.style.textAlign=f.align||'left';
       if(f.maxWidth)el.style.width=f.maxWidth+'px';ed.appendChild(el);el.addEventListener('click',e=>{e.stopPropagation();selectField(f,el)});bindDrag(el,f);
     });
@@ -301,12 +328,20 @@ function render(){
 }
 function load(){
   current=templates.find(t=>t.id===$('tplSelect').value)||templates[0];ensure(current,ori());
-  $('tplName').value=current.name;$('panelSplit').value=String(current.panelSplit||1);$('hasPhoto').value=String(current.hasPhoto);render();
+  $('tplName').value=current.name;$('panelSplit').value=String(current.panelSplit||1);$('hasPhoto').value=String(current.hasPhoto);syncUsageControls();render();
 }
 $('tplSelect').addEventListener('change',load);$('orientation').addEventListener('change',load);
 $('tplName').addEventListener('input',()=>{current.name=$('tplName').value;refreshSelect()});
 $('panelSplit').addEventListener('change',()=>{current.panelSplit=Number($('panelSplit').value);ensure(current,ori());current.layoutData[ori()].cells=null;current.layoutData[ori()].cellData={};render()});
 $('hasPhoto').addEventListener('change',()=>{current.hasPhoto=$('hasPhoto').value==='true';render()});
+Object.entries(usageMap).forEach(([key,id])=>{
+  $(id).addEventListener('change',()=>{
+    ensureUsage(current);
+    current.enabledFields[key]=$(id).checked;
+    if(selectedField && selectedField.key===key) selectedField=null;
+    render();
+  });
+});
 $('bgUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{current.backgrounds[ori()]=ev.target.result;render()};r.readAsDataURL(f)});
 $('fontFamily').addEventListener('change',()=>{if(selectedField){selectedField.fontFamily=$('fontFamily').value;render()}});
 $('fontSize').addEventListener('input',()=>{
@@ -335,7 +370,7 @@ $('fontColor').addEventListener('input',()=>{if(selectedField){selectedField.col
 $('fontWeight').addEventListener('change',()=>{if(selectedField){selectedField.weight=Number($('fontWeight').value);render()}});
 $('align').addEventListener('change',()=>{if(selectedField){selectedField.align=$('align').value;render()}});
 $('newTpl').addEventListener('click',()=>{
-  current={id:'tpl'+Date.now(),name:'새 템플릿',hasPhoto:true,panelSplit:1,backgrounds:{landscape:'',portrait:''},orientations:{landscape:{width:1400,height:1080},portrait:{width:1080,height:1368}},fields:[]};
+  current={id:'tpl'+Date.now(),name:'새 템플릿',hasPhoto:true,panelSplit:1,enabledFields:{dealType:true,propertyName:true,pyeong:true,roomsBaths:true,description:true},backgrounds:{landscape:'',portrait:''},orientations:{landscape:{width:1400,height:1080},portrait:{width:1080,height:1368}},fields:[]};
   templates.push(current);refreshSelect();load();
 });
 $('deleteTpl').addEventListener('click',()=>{if(templates.length<=1)return alert('최소 1개 템플릿은 필요합니다.');templates=templates.filter(t=>t.id!==current.id);current=templates[0];refreshSelect();load()});
