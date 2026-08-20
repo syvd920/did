@@ -7,8 +7,7 @@
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;color:#111}
 .wrap{max-width:1260px;margin:0 auto;padding:20px;display:grid;grid-template-columns:370px 1fr;gap:20px}.panel{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 28px rgba(0,0,0,.06)}
 h1{font-size:22px;margin:0 0 6px}.desc{font-size:13px;color:#6b7280;line-height:1.5}label{display:block;font-size:13px;font-weight:800;margin:12px 0 6px}
-input,select{width:100%;padding:10px;border:1px solid #d9dde3;border-radius:9px}.photoRow{display:grid;grid-template-columns:1fr;gap:7px}
-button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.primary{background:#111;color:#fff;width:100%;margin-top:15px}
+input,select{width:100%;padding:10px;border:1px solid #d9dde3;border-radius:9px}button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.primary{background:#111;color:#fff;width:100%;margin-top:15px}
 .preview{display:flex;justify-content:center;align-items:flex-start;overflow:auto}canvas{max-width:100%;height:auto;background:#ddd;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
 @media(max-width:900px){.wrap{grid-template-columns:1fr}}
 </style>
@@ -17,7 +16,7 @@ button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.
 <div class="wrap">
 <section class="panel">
 <h1>매물 광고 제작기</h1>
-<div class="desc">관리자가 만든 템플릿을 선택하고 사진과 문구만 입력하세요.</div>
+<div class="desc">관리자가 만든 실제 디자인 템플릿을 그대로 사용합니다.</div>
 <label>템플릿</label><select id="tpl"></select>
 <label>방향</label><select id="orientation"><option value="landscape">가로 1400×1080</option><option value="portrait">세로 1080×1300</option></select>
 <div id="photos"></div>
@@ -31,41 +30,28 @@ button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.
 <section class="panel preview"><canvas id="canvas" width="1400" height="1080"></canvas></section>
 </div>
 <script src="templates.js"></script>
+<script src="published-templates.js"></script>
 <script>
-const $=id=>document.getElementById(id), ctx=$('canvas').getContext('2d');let templates=JSON.parse(localStorage.getItem('adTemplates')||'null')||DEFAULT_TEMPLATES;let imgs=[];
+const $=id=>document.getElementById(id),ctx=$('canvas').getContext('2d');
+let templates=(window.PUBLISHED_TEMPLATES&&window.PUBLISHED_TEMPLATES.length)?window.PUBLISHED_TEMPLATES:DEFAULT_TEMPLATES,imgs=[],bgImg=null;
 function cur(){return templates.find(t=>t.id===$('tpl').value)||templates[0]}
-function fillTpl(){templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tpl').appendChild(o)})}
-function setupPhotos(){
-  const t=cur(), box=$('photos');box.innerHTML='';imgs=[];
-  if(!t.hasPhoto)return;
-  for(let i=0;i<t.photoSplit;i++){
-    const lab=document.createElement('label');lab.textContent=`사진 ${i+1}`;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-    inp.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const im=new Image();im.onload=()=>{imgs[i]=im;render()};im.src=ev.target.result};r.readAsDataURL(f)});
-    box.appendChild(lab);box.appendChild(inp);
-  }
-}
+function fill(){templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tpl').appendChild(o)})}
+function setupPhotos(){const t=cur(),b=$('photos');b.innerHTML='';imgs=[];if(!t.hasPhoto)return;for(let i=0;i<t.photoSplit;i++){const l=document.createElement('label');l.textContent=`사진 ${i+1}`;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const im=new Image();im.onload=()=>{imgs[i]=im;render()};im.src=ev.target.result};r.readAsDataURL(f)});b.appendChild(l);b.appendChild(inp)}}
 function cover(im,b){const ir=im.width/im.height,cr=b.w/b.h;let sx=0,sy=0,sw=im.width,sh=im.height;if(ir>cr){sw=im.height*cr;sx=(im.width-sw)/2}else{sh=im.width/cr;sy=(im.height-sh)/2}ctx.drawImage(im,sx,sy,sw,sh,b.x,b.y,b.w,b.h)}
-function boxes(split,w,h){
-  const gap=14,pad=30,top=30,uw=w-pad*2,uh=Math.floor(h*.58)-top;let arr=[];
-  if(split===1)arr=[{x:pad,y:top,w:uw,h:uh}];
-  if(split===2)arr=[{x:pad,y:top,w:(uw-gap)/2,h:uh},{x:pad+(uw+gap)/2,y:top,w:(uw-gap)/2,h:uh}];
-  if(split===3)arr=[0,1,2].map(i=>({x:pad+i*((uw-2*gap)/3+gap),y:top,w:(uw-2*gap)/3,h:uh}));
-  if(split===4)arr=[0,1,2,3].map(i=>({x:pad+(i%2)*((uw-gap)/2+gap),y:top+Math.floor(i/2)*((uh-gap)/2+gap),w:(uw-gap)/2,h:(uh-gap)/2}));
-  if(split===6)arr=[0,1,2,3,4,5].map(i=>({x:pad+(i%3)*((uw-2*gap)/3+gap),y:top+Math.floor(i/3)*((uh-gap)/2+gap),w:(uw-2*gap)/3,h:(uh-gap)/2}));
-  return arr;
-}
+function fallbackBoxes(split,w,h){const gap=14,pad=30,top=30,uw=w-pad*2,uh=Math.floor(h*.58)-top;let a=[];if(split===1)a=[{x:pad,y:top,w:uw,h:uh}];if(split===2)a=[{x:pad,y:top,w:(uw-gap)/2,h:uh},{x:pad+(uw+gap)/2,y:top,w:(uw-gap)/2,h:uh}];if(split===3)a=[0,1,2].map(i=>({x:pad+i*((uw-2*gap)/3+gap),y:top,w:(uw-2*gap)/3,h:uh}));if(split===4)a=[0,1,2,3].map(i=>({x:pad+(i%2)*((uw-gap)/2+gap),y:top+Math.floor(i/2)*((uh-gap)/2+gap),w:(uw-gap)/2,h:(uh-gap)/2}));if(split===6)a=[0,1,2,3,4,5].map(i=>({x:pad+(i%3)*((uw-2*gap)/3+gap),y:top+Math.floor(i/3)*((uh-gap)/2+gap),w:(uw-2*gap)/3,h:(uh-gap)/2}));return a}
+function loadBgThenRender(){const t=cur(),o=$('orientation').value,src=t.backgrounds&&t.backgrounds[o];if(!src){bgImg=null;render();return}const im=new Image();im.onload=()=>{bgImg=im;render()};im.src=src}
 function render(){
-  const t=cur(),ori=$('orientation').value,dim=t.orientations[ori];$('canvas').width=dim.width;$('canvas').height=dim.height;
-  ctx.fillStyle=t.hasPhoto?'#222':'#f3f4f6';ctx.fillRect(0,0,dim.width,dim.height);
-  const ld=t.layoutData&&t.layoutData[ori];let pb=(ld&&ld.photoBoxes)||boxes(t.photoSplit||1,dim.width,dim.height);
-  if(t.hasPhoto)pb.forEach((b,i)=>{if(imgs[i])cover(imgs[i],b);else{ctx.fillStyle='#cfd5dc';ctx.fillRect(b.x,b.y,b.w,b.h)}})
-  const values={headline:$('headline').value,subcopy:$('subcopy').value,price:$('price').value,agency:$('agency').value,phone:$('phone').value};
-  t.fields.forEach(f=>{const d=(ld&&ld.fields&&ld.fields[f.key])?ld.fields[f.key]:f;ctx.font=`${d.weight||700} ${d.fontSize}px sans-serif`;ctx.fillStyle=d.color;ctx.textAlign=d.align||'left';ctx.textBaseline='top';ctx.fillText(values[f.key]||'',d.x,d.y)});
+  const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o];$('canvas').width=d.width;$('canvas').height=d.height;
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,d.width,d.height);
+  const pbs=(ld&&ld.photoBoxes)||fallbackBoxes(t.photoSplit||1,d.width,d.height);
+  if(t.hasPhoto)pbs.forEach((b,i)=>{if(imgs[i])cover(imgs[i],b)});
+  if(bgImg)ctx.drawImage(bgImg,0,0,d.width,d.height);
+  const vals={headline:$('headline').value,subcopy:$('subcopy').value,price:$('price').value,agency:$('agency').value,phone:$('phone').value};
+  t.fields.forEach(f=>{const x=(ld&&ld.fields&&ld.fields[f.key])?ld.fields[f.key]:f;ctx.font=`${x.weight||700} ${x.fontSize}px sans-serif`;ctx.fillStyle=x.color;ctx.textAlign=x.align||'left';ctx.textBaseline='top';ctx.fillText(vals[f.key]||'',x.x,x.y)});
 }
-$('tpl').addEventListener('change',()=>{setupPhotos();render()});$('orientation').addEventListener('change',render);
+$('tpl').addEventListener('change',()=>{setupPhotos();loadBgThenRender()});$('orientation').addEventListener('change',()=>{setupPhotos();loadBgThenRender()});
 ['headline','subcopy','price','agency','phone'].forEach(id=>$(id).addEventListener('input',render));
 $('download').addEventListener('click',()=>{render();const a=document.createElement('a');a.download='realestate_ad.png';a.href=$('canvas').toDataURL('image/png');a.click()});
-fillTpl();setupPhotos();render();
+fill();setupPhotos();loadBgThenRender();
 </script>
-</body>
-</html>
+</body></html>

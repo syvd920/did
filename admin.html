@@ -6,7 +6,7 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;color:#111}
-.wrap{max-width:1450px;margin:0 auto;padding:20px;display:grid;grid-template-columns:360px 1fr;gap:20px}
+.wrap{max-width:1500px;margin:0 auto;padding:20px;display:grid;grid-template-columns:370px 1fr;gap:20px}
 .panel{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 28px rgba(0,0,0,.06)}
 h1{font-size:22px;margin:0 0 6px}.desc{font-size:13px;color:#6b7280;line-height:1.5}
 label{display:block;font-size:13px;font-weight:800;margin:12px 0 6px}
@@ -16,24 +16,23 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
 .primary{background:#111;color:#fff}.secondary{background:#edf0f3}.danger{background:#fee2e2;color:#991b1b}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .canvasbox{display:flex;justify-content:center;align-items:flex-start;overflow:auto;min-height:760px}
-#editor{position:relative;background:#eceff3;box-shadow:0 8px 30px rgba(0,0,0,.12);transform-origin:top center}
+#editor{position:relative;background:#eceff3;box-shadow:0 8px 30px rgba(0,0,0,.12);transform-origin:top center;background-size:100% 100%;background-repeat:no-repeat}
 .el{position:absolute;border:1px dashed transparent;cursor:move;user-select:none;white-space:nowrap;padding:2px 4px}
-.el.selected{border-color:#2563eb;background:rgba(37,99,235,.06)}
-.photo{position:absolute;border:2px dashed #7c3aed;background:rgba(124,58,237,.08);display:flex;align-items:center;justify-content:center;color:#6d28d9;font-weight:800;cursor:move}
+.el.selected{border-color:#2563eb;background:rgba(37,99,235,.08)}
+.photo{position:absolute;border:2px dashed #7c3aed;background:rgba(124,58,237,.10);display:flex;align-items:center;justify-content:center;color:#6d28d9;font-weight:800;cursor:move;resize:both;overflow:auto}
 .section{border-top:1px solid #eceff3;margin-top:16px;padding-top:14px}
-.small{font-size:12px;color:#777}
-@media(max-width:1000px){.wrap{grid-template-columns:1fr}}
+.small{font-size:12px;color:#777;line-height:1.5}
+.thumb{width:100%;max-height:120px;object-fit:contain;background:#f3f4f6;border-radius:8px;margin-top:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <section class="panel">
   <h1>템플릿 관리자</h1>
-  <div class="desc">템플릿 이름, 사진 사용 여부, 분할 수를 정하고 요소 위치와 글자 속성을 직접 조정합니다.</div>
+  <div class="desc">실제 디자인 배경을 먼저 올린 뒤 그 위에 사진영역과 글씨를 배치합니다.</div>
 
   <label>템플릿</label>
   <select id="tplSelect"></select>
-
   <div class="actions">
     <button class="secondary" id="newTpl">새 템플릿</button>
     <button class="danger" id="deleteTpl">삭제</button>
@@ -42,6 +41,17 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
   <div class="section">
     <label>템플릿 이름</label>
     <input id="tplName">
+
+    <label>방향</label>
+    <select id="orientation">
+      <option value="landscape">가로 1400×1080</option>
+      <option value="portrait">세로 1080×1300</option>
+    </select>
+
+    <label>배경 디자인 이미지</label>
+    <input type="file" id="bgUpload" accept="image/*">
+    <div class="small">세영님이 완성한 PNG/JPG 디자인을 그대로 업로드합니다. 가로/세로 각각 별도 저장됩니다.</div>
+    <img id="bgThumb" class="thumb" alt="배경 미리보기">
 
     <div class="row">
       <div>
@@ -62,39 +72,29 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
         </select>
       </div>
     </div>
-
-    <label>방향</label>
-    <select id="orientation">
-      <option value="landscape">가로 1400×1080</option>
-      <option value="portrait">세로 1080×1300</option>
-    </select>
   </div>
 
   <div class="section">
     <strong>선택한 글씨 설정</strong>
-    <div class="small">캔버스에서 글씨를 클릭한 뒤 수정하세요.</div>
+    <div class="small">캔버스에서 글씨를 선택한 후 수정하세요.</div>
     <label>글자 크기</label>
-    <input type="number" id="fontSize" min="12" max="140">
+    <input type="number" id="fontSize" min="12" max="160">
     <label>글자 색상</label>
     <input type="color" id="fontColor">
     <label>굵기</label>
     <select id="fontWeight">
-      <option value="400">보통</option>
-      <option value="700">굵게</option>
-      <option value="800">매우 굵게</option>
-      <option value="900">최대 굵게</option>
+      <option value="400">보통</option><option value="700">굵게</option>
+      <option value="800">매우 굵게</option><option value="900">최대 굵게</option>
     </select>
     <label>정렬</label>
     <select id="align">
-      <option value="left">왼쪽</option>
-      <option value="center">가운데</option>
-      <option value="right">오른쪽</option>
+      <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
     </select>
   </div>
 
   <div class="actions">
-    <button class="primary" id="saveLocal">저장</button>
-    <button class="secondary" id="exportBtn">templates.json 내보내기</button>
+    <button class="primary" id="saveLocal">이 브라우저에 저장</button>
+    <button class="secondary" id="exportBtn">템플릿 파일 내보내기</button>
   </div>
 </section>
 
@@ -106,83 +106,99 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
 <script src="templates.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-let templates=JSON.parse(localStorage.getItem('adTemplates')||'null')||JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
+let templates=JSON.parse(localStorage.getItem('adTemplatesV4')||'null')||JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
 let current=null, selectedField=null, dragging=null, offsetX=0, offsetY=0;
 
-function currentOrientation(){return $('orientation').value}
 function refreshSelect(){
   $('tplSelect').innerHTML='';
   templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tplSelect').appendChild(o)});
   if(current) $('tplSelect').value=current.id;
 }
-function ensureLayoutData(t,ori){
+function ori(){return $('orientation').value}
+function ensure(t,o){
+  if(!t.backgrounds) t.backgrounds={landscape:'',portrait:''};
   if(!t.layoutData) t.layoutData={};
-  if(!t.layoutData[ori]) t.layoutData[ori]={photoBoxes:null,fields:{}};
+  if(!t.layoutData[o]) t.layoutData[o]={photoBoxes:null,fields:{}};
 }
-function generatePhotoBoxes(split,w,h){
-  const gap=14,pad=30, top=30, usableW=w-pad*2, usableH=Math.floor(h*.58)-top;
-  let boxes=[];
-  if(split===1) boxes=[{x:pad,y:top,w:usableW,h:usableH}];
-  if(split===2) boxes=[{x:pad,y:top,w:(usableW-gap)/2,h:usableH},{x:pad+(usableW+gap)/2,y:top,w:(usableW-gap)/2,h:usableH}];
-  if(split===3) boxes=[0,1,2].map(i=>({x:pad+i*(usableW-2*gap)/3+i*gap,y:top,w:(usableW-2*gap)/3,h:usableH}));
-  if(split===4) boxes=[0,1,2,3].map(i=>({x:pad+(i%2)*((usableW-gap)/2+gap),y:top+Math.floor(i/2)*((usableH-gap)/2+gap),w:(usableW-gap)/2,h:(usableH-gap)/2}));
-  if(split===6) boxes=[0,1,2,3,4,5].map(i=>({x:pad+(i%3)*((usableW-2*gap)/3+gap),y:top+Math.floor(i/3)*((usableH-gap)/2+gap),w:(usableW-2*gap)/3,h:(usableH-gap)/2}));
-  return boxes;
-}
-function renderEditor(){
-  if(!current)return;
-  const ori=currentOrientation(), dim=current.orientations[ori], scale=Math.min(1,900/dim.width,720/dim.height);
-  const ed=$('editor');ed.style.width=dim.width+'px';ed.style.height=dim.height+'px';ed.style.transform=`scale(${scale})`;
-  ed.innerHTML=''; ensureLayoutData(current,ori);
-  const ld=current.layoutData[ori];
-  if(current.hasPhoto){
-    if(!ld.photoBoxes || ld.photoBoxes.length!==Number(current.photoSplit)) ld.photoBoxes=generatePhotoBoxes(Number(current.photoSplit),dim.width,dim.height);
-    ld.photoBoxes.forEach((b,i)=>{
-      const d=document.createElement('div');d.className='photo';d.textContent=`사진 ${i+1}`;applyRect(d,b);d.dataset.type='photo';d.dataset.index=i;ed.appendChild(d);bindDrag(d,b);
-    });
-  }
-  current.fields.forEach(f=>{
-    const saved=ld.fields[f.key]||{};
-    const data={...f,...saved}; ld.fields[f.key]=data;
-    const d=document.createElement('div');d.className='el';d.textContent=f.label;d.style.left=data.x+'px';d.style.top=data.y+'px';
-    d.style.fontSize=data.fontSize+'px';d.style.fontWeight=data.weight;d.style.color=data.color;d.style.textAlign=data.align||'left';
-    d.dataset.key=f.key;ed.appendChild(d);
-    d.addEventListener('click',e=>{e.stopPropagation();selectField(data,d)});
-    bindDrag(d,data);
-  });
+function dims(){return current.orientations[ori()]}
+function genBoxes(split,w,h){
+  const gap=14,pad=30,top=30,uw=w-pad*2,uh=Math.floor(h*.58)-top;let a=[];
+  if(split===1)a=[{x:pad,y:top,w:uw,h:uh}];
+  if(split===2)a=[{x:pad,y:top,w:(uw-gap)/2,h:uh},{x:pad+(uw+gap)/2,y:top,w:(uw-gap)/2,h:uh}];
+  if(split===3)a=[0,1,2].map(i=>({x:pad+i*((uw-2*gap)/3+gap),y:top,w:(uw-2*gap)/3,h:uh}));
+  if(split===4)a=[0,1,2,3].map(i=>({x:pad+(i%2)*((uw-gap)/2+gap),y:top+Math.floor(i/2)*((uh-gap)/2+gap),w:(uw-gap)/2,h:(uh-gap)/2}));
+  if(split===6)a=[0,1,2,3,4,5].map(i=>({x:pad+(i%3)*((uw-2*gap)/3+gap),y:top+Math.floor(i/3)*((uh-gap)/2+gap),w:(uw-2*gap)/3,h:(uh-gap)/2}));
+  return a;
 }
 function applyRect(d,b){d.style.left=b.x+'px';d.style.top=b.y+'px';d.style.width=b.w+'px';d.style.height=b.h+'px'}
-function bindDrag(el,data){
-  el.addEventListener('pointerdown',e=>{dragging={el,data};offsetX=e.clientX-el.getBoundingClientRect().left;offsetY=e.clientY-el.getBoundingClientRect().top;el.setPointerCapture(e.pointerId)});
+function bindDrag(el,data,isPhoto=false){
+  el.addEventListener('pointerdown',e=>{
+    if(e.target!==el)return;
+    dragging={el,data,isPhoto};
+    const r=el.getBoundingClientRect();offsetX=e.clientX-r.left;offsetY=e.clientY-r.top;
+    el.setPointerCapture(e.pointerId);
+  });
   el.addEventListener('pointermove',e=>{
     if(!dragging||dragging.el!==el)return;
-    const ed=$('editor').getBoundingClientRect(), sx=$('editor').offsetWidth/ed.width, sy=$('editor').offsetHeight/ed.height;
-    data.x=Math.max(0,(e.clientX-ed.left)*sx-offsetX*sx);data.y=Math.max(0,(e.clientY-ed.top)*sy-offsetY*sy);
+    const er=$('editor').getBoundingClientRect();
+    const sx=$('editor').offsetWidth/er.width, sy=$('editor').offsetHeight/er.height;
+    data.x=Math.max(0,(e.clientX-er.left)*sx-offsetX*sx);
+    data.y=Math.max(0,(e.clientY-er.top)*sy-offsetY*sy);
     el.style.left=data.x+'px';el.style.top=data.y+'px';
   });
-  el.addEventListener('pointerup',()=>dragging=null);
+  el.addEventListener('pointerup',()=>{
+    if(dragging && dragging.el===el && isPhoto){
+      data.w=el.offsetWidth;data.h=el.offsetHeight;
+    }
+    dragging=null;
+  });
 }
 function selectField(data,el){
   selectedField=data;document.querySelectorAll('.el').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');
   $('fontSize').value=data.fontSize;$('fontColor').value=data.color;$('fontWeight').value=String(data.weight);$('align').value=data.align||'left';
 }
-function loadCurrent(){
-  current=templates.find(t=>t.id===$('tplSelect').value)||templates[0];
-  $('tplName').value=current.name;$('hasPhoto').value=String(current.hasPhoto);$('photoSplit').value=String(current.photoSplit||1);
-  $('photoSplit').disabled=!current.hasPhoto;renderEditor();
+function render(){
+  if(!current)return;ensure(current,ori());
+  const d=dims(),scale=Math.min(1,920/d.width,720/d.height),ed=$('editor');
+  ed.style.width=d.width+'px';ed.style.height=d.height+'px';ed.style.transform=`scale(${scale})`;
+  ed.style.backgroundImage=current.backgrounds[ori()]?`url("${current.backgrounds[ori()]}")`:'none';
+  ed.innerHTML='';
+  const ld=current.layoutData[ori()];
+  if(current.hasPhoto){
+    if(!ld.photoBoxes || ld.photoBoxes.length!==Number(current.photoSplit)) ld.photoBoxes=genBoxes(Number(current.photoSplit),d.width,d.height);
+    ld.photoBoxes.forEach((b,i)=>{
+      const el=document.createElement('div');el.className='photo';el.textContent=`사진 ${i+1}`;applyRect(el,b);ed.appendChild(el);bindDrag(el,b,true);
+    });
+  }
+  current.fields.forEach(f=>{
+    const data={...f,...(ld.fields[f.key]||{})};ld.fields[f.key]=data;
+    const el=document.createElement('div');el.className='el';el.textContent=f.label;
+    el.style.left=data.x+'px';el.style.top=data.y+'px';el.style.fontSize=data.fontSize+'px';el.style.fontWeight=data.weight;el.style.color=data.color;el.style.textAlign=data.align||'left';
+    ed.appendChild(el);el.addEventListener('click',e=>{e.stopPropagation();selectField(data,el)});bindDrag(el,data,false);
+  });
+  $('bgThumb').src=current.backgrounds[ori()]||'';
 }
-$('tplSelect').addEventListener('change',loadCurrent);
-$('orientation').addEventListener('change',renderEditor);
+function load(){
+  current=templates.find(t=>t.id===$('tplSelect').value)||templates[0];
+  ensure(current,ori());$('tplName').value=current.name;$('hasPhoto').value=String(current.hasPhoto);$('photoSplit').value=String(current.photoSplit||1);$('photoSplit').disabled=!current.hasPhoto;render();
+}
+$('tplSelect').addEventListener('change',load);
+$('orientation').addEventListener('change',load);
 $('tplName').addEventListener('input',()=>{current.name=$('tplName').value;refreshSelect()});
-$('hasPhoto').addEventListener('change',()=>{current.hasPhoto=$('hasPhoto').value==='true';$('photoSplit').disabled=!current.hasPhoto;renderEditor()});
-$('photoSplit').addEventListener('change',()=>{current.photoSplit=Number($('photoSplit').value);ensureLayoutData(current,currentOrientation());current.layoutData[currentOrientation()].photoBoxes=null;renderEditor()});
-$('fontSize').addEventListener('input',()=>{if(selectedField){selectedField.fontSize=Number($('fontSize').value);renderEditor()}});
-$('fontColor').addEventListener('input',()=>{if(selectedField){selectedField.color=$('fontColor').value;renderEditor()}});
-$('fontWeight').addEventListener('change',()=>{if(selectedField){selectedField.weight=Number($('fontWeight').value);renderEditor()}});
-$('align').addEventListener('change',()=>{if(selectedField){selectedField.align=$('align').value;renderEditor()}});
+$('hasPhoto').addEventListener('change',()=>{current.hasPhoto=$('hasPhoto').value==='true';$('photoSplit').disabled=!current.hasPhoto;render()});
+$('photoSplit').addEventListener('change',()=>{current.photoSplit=Number($('photoSplit').value);ensure(current,ori());current.layoutData[ori()].photoBoxes=null;render()});
+$('bgUpload').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{ensure(current,ori());current.backgrounds[ori()]=ev.target.result;render()};r.readAsDataURL(f)
+});
+$('fontSize').addEventListener('input',()=>{if(selectedField){selectedField.fontSize=Number($('fontSize').value);render()}});
+$('fontColor').addEventListener('input',()=>{if(selectedField){selectedField.color=$('fontColor').value;render()}});
+$('fontWeight').addEventListener('change',()=>{if(selectedField){selectedField.weight=Number($('fontWeight').value);render()}});
+$('align').addEventListener('change',()=>{if(selectedField){selectedField.align=$('align').value;render()}});
 $('newTpl').addEventListener('click',()=>{
   const id='tpl'+Date.now();
-  current={id,name:'새 템플릿',hasPhoto:true,photoSplit:1,orientations:{landscape:{width:1400,height:1080},portrait:{width:1080,height:1300}},
+  current={id,name:'새 템플릿',hasPhoto:true,photoSplit:1,backgrounds:{landscape:'',portrait:''},
+    orientations:{landscape:{width:1400,height:1080},portrait:{width:1080,height:1300}},
     fields:[
       {key:'headline',label:'메인카피',x:70,y:700,fontSize:70,color:'#ffffff',weight:900,align:'left'},
       {key:'subcopy',label:'서브카피',x:70,y:850,fontSize:32,color:'#ffffff',weight:700,align:'left'},
@@ -190,15 +206,15 @@ $('newTpl').addEventListener('click',()=>{
       {key:'agency',label:'상호',x:1320,y:920,fontSize:27,color:'#ffffff',weight:800,align:'right'},
       {key:'phone',label:'연락처',x:1320,y:965,fontSize:24,color:'#ffffff',weight:700,align:'right'}
     ]};
-  templates.push(current);refreshSelect();loadCurrent();
+  templates.push(current);refreshSelect();load();
 });
-$('deleteTpl').addEventListener('click',()=>{if(templates.length<=1)return alert('최소 1개 템플릿은 필요합니다.');templates=templates.filter(t=>t.id!==current.id);current=templates[0];refreshSelect();loadCurrent()});
-$('saveLocal').addEventListener('click',()=>{localStorage.setItem('adTemplates',JSON.stringify(templates));alert('이 브라우저에 저장했습니다.')});
+$('deleteTpl').addEventListener('click',()=>{if(templates.length<=1)return alert('최소 1개 템플릿은 필요합니다.');templates=templates.filter(t=>t.id!==current.id);current=templates[0];refreshSelect();load()});
+$('saveLocal').addEventListener('click',()=>{localStorage.setItem('adTemplatesV4',JSON.stringify(templates));alert('저장했습니다.')});
 $('exportBtn').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify(templates,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='templates.json';a.click();URL.revokeObjectURL(a.href);
+  const js='window.PUBLISHED_TEMPLATES = '+JSON.stringify(templates,null,2)+';';
+  const blob=new Blob([js],{type:'text/javascript'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='published-templates.js';a.click();URL.revokeObjectURL(a.href);
 });
-refreshSelect();current=templates[0];loadCurrent();
+refreshSelect();current=templates[0];load();
 </script>
-</body>
-</html>
+</body></html>
