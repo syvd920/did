@@ -90,7 +90,7 @@ function styleControls(key,idx,base){
   [fs,c,s].forEach(el=>el.addEventListener('input',render));wrap.append(fs,c,s);return wrap;
 }
 function setupForms(){
-  const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o],cells=(ld&&ld.cells)||makeCells(t.panelSplit||1,d.width,d.height,o);
+  const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o],cells=makeCells(t.panelSplit||1,d.width,d.height,o);
   const box=$('forms');box.innerHTML='';cellImages=[];
   cells.forEach((cell,idx)=>{
     const flds=(ld&&ld.cellData&&ld.cellData[idx]&&ld.cellData[idx].fields)||baseFields(cell);
@@ -118,16 +118,57 @@ function setupForms(){
 function contain(im,b){
   const sc=Math.min(b.w/im.width,b.h/im.height),w=im.width*sc,h=im.height*sc,x=b.x+(b.w-w)/2,y=b.y+(b.h-h)/2;ctx.drawImage(im,x,y,w,h);
 }
+function measureTextWidth(text,font,size,weight){
+  ctx.font=`${weight||700} ${size}px "${font}"`;
+  return ctx.measureText(text).width;
+}
+function centeredDrawX(text,cfg,font,newSize,weight){
+  const baseSize=cfg.fontSize||newSize;
+  const baseFont=cfg.fontFamily||font;
+  const baseW=measureTextWidth(text,baseFont,baseSize,weight);
+  const newW=measureTextWidth(text,font,newSize,weight);
+  if((cfg.align||'left')==='center') return cfg.x;
+  if((cfg.align||'left')==='right') return cfg.x;
+  return cfg.x+(baseW-newW)/2;
+}
+function centeredDrawY(cfg,newSize){
+  const baseSize=cfg.fontSize||newSize;
+  return cfg.y+(baseSize-newSize)/2;
+}
 function drawWrapped(text,cfg,idx){
-  const font=document.getElementById(`descriptionFont${idx}`).value,size=Number(document.getElementById(`descriptionSize${idx}`).value),color=document.getElementById(`descriptionColor${idx}`).value;
-  ctx.font=`${cfg.weight||700} ${size}px "${font}"`;ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
-  const mw=cfg.maxWidth||400,lh=cfg.lineHeight||size*1.25;let line='',lines=[];
-  for(const ch of [...text]){const test=line+ch;if(ctx.measureText(test).width>mw&&line){lines.push(line);line=ch}else line=test}if(line)lines.push(line);
-  lines.slice(0,2).forEach((ln,i)=>ctx.fillText(ln,cfg.x,cfg.y+i*lh));
+  const font=document.getElementById(`descriptionFont${idx}`).value;
+  const size=Number(document.getElementById(`descriptionSize${idx}`).value);
+  const color=document.getElementById(`descriptionColor${idx}`).value;
+  const weight=cfg.weight||700;
+  ctx.font=`${weight} ${size}px "${font}"`;
+  ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
+  const mw=cfg.maxWidth||400;
+  const baseLH=cfg.lineHeight||((cfg.fontSize||size)*1.25);
+  const lh=baseLH*(size/(cfg.fontSize||size));
+  let line='',lines=[];
+  for(const ch of [...text]){
+    const test=line+ch;
+    if(ctx.measureText(test).width>mw&&line){lines.push(line);line=ch}else line=test;
+  }
+  if(line)lines.push(line);
+  const shown=lines.slice(0,2);
+  const blockBaseH=Math.max(1,shown.length)*(cfg.lineHeight||((cfg.fontSize||size)*1.25));
+  const blockNewH=Math.max(1,shown.length)*lh;
+  const y=cfg.y+(blockBaseH-blockNewH)/2;
+  shown.forEach((ln,i)=>{
+    const x=centeredDrawX(ln,cfg,font,size,weight);
+    ctx.fillText(ln,x,y+i*lh);
+  });
 }
 function drawSimple(text,cfg,key,idx){
-  const font=document.getElementById(`${key}Font${idx}`).value,size=Number(document.getElementById(`${key}Size${idx}`).value),color=document.getElementById(`${key}Color${idx}`).value;
-  ctx.font=`${cfg.weight||700} ${size}px "${font}"`;ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';ctx.fillText(text,cfg.x,cfg.y);
+  const font=document.getElementById(`${key}Font${idx}`).value;
+  const size=Number(document.getElementById(`${key}Size${idx}`).value);
+  const color=document.getElementById(`${key}Color${idx}`).value;
+  const weight=cfg.weight||700;
+  ctx.font=`${weight} ${size}px "${font}"`;ctx.fillStyle=color;ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
+  const x=centeredDrawX(text,cfg,font,size,weight);
+  const y=centeredDrawY(cfg,size);
+  ctx.fillText(text,x,y);
 }
 function loadBg(){
   const t=cur(),o=$('orientation').value,src=t.backgrounds&&t.backgrounds[o];
@@ -135,7 +176,7 @@ function loadBg(){
   const im=new Image();im.onload=()=>{bgImg=im;render()};im.src=src;
 }
 function render(){
-  const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o],cells=(ld&&ld.cells)||makeCells(t.panelSplit||1,d.width,d.height,o);
+  const t=cur(),o=$('orientation').value,d=t.orientations[o],ld=t.layoutData&&t.layoutData[o],cells=makeCells(t.panelSplit||1,d.width,d.height,o);
   $('canvas').width=d.width;$('canvas').height=d.height;ctx.fillStyle='#fff';ctx.fillRect(0,0,d.width,d.height);
   cells.forEach((cell,idx)=>{
     if(t.hasPhoto&&cellImages[idx]){ctx.save();ctx.beginPath();ctx.rect(cell.x,cell.y,cell.w,cell.h);ctx.clip();contain(cellImages[idx],cell);ctx.restore()}

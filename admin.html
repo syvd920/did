@@ -101,7 +101,7 @@ button{border:0;border-radius:10px;padding:11px 12px;font-weight:800;cursor:poin
 <script src="templates.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-let templates=JSON.parse(localStorage.getItem('adTemplatesV6')||'null')||JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
+let templates=JSON.parse(localStorage.getItem('adTemplatesV8')||'null')||JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
 let current=null, selectedField=null, dragging=null, offsetX=0, offsetY=0;
 
 function ori(){return $('orientation').value}
@@ -191,20 +191,22 @@ function bindDrag(el,data){
 
     const editor=$('editor');
     const er=editor.getBoundingClientRect();
-    const sx=editor.offsetWidth/er.width;
-    const sy=editor.offsetHeight/er.height;
+    const scaleX=er.width/editor.offsetWidth;
+    const scaleY=er.height/editor.offsetHeight;
 
-    let nx=(e.clientX-er.left)*sx-offsetX*sx;
-    let ny=(e.clientY-er.top)*sy-offsetY*sy;
+    // 화면 좌표 -> 실제 캔버스 좌표
+    let nx=(e.clientX-er.left-offsetX)/scaleX;
+    let ny=(e.clientY-er.top-offsetY)/scaleY;
 
-    // 캔버스 네 방향 모두 제한
-    const ew=el.offsetWidth;
-    const eh=el.offsetHeight;
-    const maxX=Math.max(0,editor.offsetWidth-ew);
-    const maxY=Math.max(0,editor.offsetHeight-eh);
+    // 요소 크기도 실제 캔버스 좌표 기준으로 계산
+    const elementRect=el.getBoundingClientRect();
+    const logicalW=elementRect.width/scaleX;
+    const logicalH=elementRect.height/scaleY;
+    const maxX=Math.max(0,editor.offsetWidth-logicalW);
+    const maxY=Math.max(0,editor.offsetHeight-logicalH);
 
-    nx=Math.max(0,Math.min(nx,maxX));
-    ny=Math.max(0,Math.min(ny,maxY));
+    nx=Math.min(Math.max(0,nx),maxX);
+    ny=Math.min(Math.max(0,ny),maxY);
 
     data.x=nx;
     data.y=ny;
@@ -225,7 +227,7 @@ function render(){
   ed.style.backgroundImage=current.backgrounds[ori()]?`url("${current.backgrounds[ori()]}")`:'none';ed.innerHTML='';
   const ld=current.layoutData[ori()];
   const split=Number(current.panelSplit||1);
-  if(!ld.cells || ld.cells.length!==split) ld.cells=makeCells(split,d.width,d.height,ori());
+  ld.cells=makeCells(split,d.width,d.height,ori());
   ld.cells.forEach((cell,idx)=>{
     if(!ld.cellData[idx]) ld.cellData[idx]={fields:baseFieldsForCell(cell),photo:{x:cell.x,y:cell.y,w:cell.w,h:cell.h}};
     const wrap=document.createElement('div');wrap.className='panelcell';wrap.style.left=cell.x+'px';wrap.style.top=cell.y+'px';wrap.style.width=cell.w+'px';wrap.style.height=cell.h+'px';
@@ -251,7 +253,28 @@ $('panelSplit').addEventListener('change',()=>{current.panelSplit=Number($('pane
 $('hasPhoto').addEventListener('change',()=>{current.hasPhoto=$('hasPhoto').value==='true';render()});
 $('bgUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{current.backgrounds[ori()]=ev.target.result;render()};r.readAsDataURL(f)});
 $('fontFamily').addEventListener('change',()=>{if(selectedField){selectedField.fontFamily=$('fontFamily').value;render()}});
-$('fontSize').addEventListener('input',()=>{if(selectedField){selectedField.fontSize=Number($('fontSize').value);render()}});
+$('fontSize').addEventListener('input',()=>{
+  if(!selectedField)return;
+  const editor=$('editor');
+  const selectedEl=document.querySelector('.el.selected');
+  if(!selectedEl){selectedField.fontSize=Number($('fontSize').value);render();return;}
+  const er=editor.getBoundingClientRect();
+  const scaleX=er.width/editor.offsetWidth, scaleY=er.height/editor.offsetHeight;
+  const before=selectedEl.getBoundingClientRect();
+  const centerX=selectedField.x+(before.width/scaleX)/2;
+  const centerY=selectedField.y+(before.height/scaleY)/2;
+  selectedField.fontSize=Number($('fontSize').value);
+  render();
+  requestAnimationFrame(()=>{
+    const el=document.querySelector('.el.selected')||[...document.querySelectorAll('.el')].find(x=>x.textContent===selectedField.label);
+    if(!el)return;
+    const after=el.getBoundingClientRect();
+    const logicalW=after.width/scaleX, logicalH=after.height/scaleY;
+    selectedField.x=Math.max(0,Math.min(centerX-logicalW/2,editor.offsetWidth-logicalW));
+    selectedField.y=Math.max(0,Math.min(centerY-logicalH/2,editor.offsetHeight-logicalH));
+    render();
+  });
+});
 $('fontColor').addEventListener('input',()=>{if(selectedField){selectedField.color=$('fontColor').value;render()}});
 $('fontWeight').addEventListener('change',()=>{if(selectedField){selectedField.weight=Number($('fontWeight').value);render()}});
 $('align').addEventListener('change',()=>{if(selectedField){selectedField.align=$('align').value;render()}});
@@ -260,7 +283,7 @@ $('newTpl').addEventListener('click',()=>{
   templates.push(current);refreshSelect();load();
 });
 $('deleteTpl').addEventListener('click',()=>{if(templates.length<=1)return alert('최소 1개 템플릿은 필요합니다.');templates=templates.filter(t=>t.id!==current.id);current=templates[0];refreshSelect();load()});
-$('saveLocal').addEventListener('click',()=>{localStorage.setItem('adTemplatesV6',JSON.stringify(templates));alert('저장했습니다.')});
+$('saveLocal').addEventListener('click',()=>{localStorage.setItem('adTemplatesV8',JSON.stringify(templates));alert('저장했습니다.')});
 $('exportBtn').addEventListener('click',()=>{const js='window.PUBLISHED_TEMPLATES = '+JSON.stringify(templates,null,2)+';';const blob=new Blob([js],{type:'text/javascript'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='published-templates.js';a.click()});
 refreshSelect();current=templates[0];load();
 </script>
