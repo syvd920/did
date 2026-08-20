@@ -1,209 +1,71 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>공인중개사 광고 제작기</title>
 <style>
-:root{--bg:#f3f5f7;--panel:#fff;--line:#dfe3e8;--text:#111;--muted:#6c727a}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;color:var(--text)}
-.wrap{max-width:1280px;margin:0 auto;padding:22px;display:grid;grid-template-columns:390px 1fr;gap:22px}
-.panel{background:#fff;border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.07)}
-h1{font-size:23px;margin:0 0 6px}.desc{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:16px}
-label{display:block;font-size:13px;font-weight:800;margin:13px 0 7px}
-input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px;background:#fff}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.file{border:1.5px dashed #c6cbd2;border-radius:13px;padding:14px;background:#fafbfc}
-.color-row{display:grid;grid-template-columns:1fr 70px;gap:10px;align-items:center}
-input[type=color]{height:42px;padding:3px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
-button{border:0;border-radius:11px;padding:12px 14px;font-size:14px;font-weight:900;cursor:pointer}
-.primary{background:#111;color:#fff}.secondary{background:#edf0f3;color:#111}.full{grid-column:1/-1}
-.preview{display:flex;flex-direction:column;align-items:center;gap:12px}
-canvas{max-width:100%;height:auto;background:#ddd;border-radius:16px;box-shadow:0 10px 35px rgba(0,0,0,.13)}
-.note{font-size:12px;color:#777;text-align:center}
-.badge{display:inline-block;background:#111;color:#fff;font-size:11px;font-weight:900;padding:5px 8px;border-radius:999px;margin-bottom:8px}
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;color:#111}
+.wrap{max-width:1260px;margin:0 auto;padding:20px;display:grid;grid-template-columns:370px 1fr;gap:20px}.panel{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 28px rgba(0,0,0,.06)}
+h1{font-size:22px;margin:0 0 6px}.desc{font-size:13px;color:#6b7280;line-height:1.5}label{display:block;font-size:13px;font-weight:800;margin:12px 0 6px}
+input,select{width:100%;padding:10px;border:1px solid #d9dde3;border-radius:9px}.photoRow{display:grid;grid-template-columns:1fr;gap:7px}
+button{border:0;border-radius:10px;padding:12px;font-weight:900;cursor:pointer}.primary{background:#111;color:#fff;width:100%;margin-top:15px}
+.preview{display:flex;justify-content:center;align-items:flex-start;overflow:auto}canvas{max-width:100%;height:auto;background:#ddd;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
 @media(max-width:900px){.wrap{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <section class="panel">
-    <span class="badge">중개사용</span>
-    <h1>매물 광고 제작기</h1>
-    <div class="desc">디자인은 고정되어 있습니다. 템플릿을 고르고 사진, 문구, 허용 색상만 바꿔서 사용하세요.</div>
-
-    <div class="row">
-      <div>
-        <label>템플릿</label>
-        <select id="template"></select>
-      </div>
-      <div>
-        <label>규격</label>
-        <select id="format">
-          <option value="landscape">가로 1400×1080</option>
-          <option value="portrait">세로 1080×1300</option>
-        </select>
-      </div>
-    </div>
-
-    <label>매물 사진</label>
-    <div class="file"><input type="file" id="photo" accept="image/*"></div>
-
-    <label>메인 카피</label>
-    <input id="headline" value="건대입구역 역세권 신축급 2룸">
-
-    <label>서브 카피</label>
-    <input id="subcopy" value="남향 · 주차가능 · 즉시입주">
-
-    <label>가격 / 조건</label>
-    <input id="price" value="매매 9억 8,000만원">
-
-    <div class="row">
-      <div>
-        <label>공인중개사명</label>
-        <input id="agency" value="OO공인중개사">
-      </div>
-      <div>
-        <label>연락처</label>
-        <input id="phone" value="02-0000-0000">
-      </div>
-    </div>
-
-    <label>강조 색상</label>
-    <div class="color-row">
-      <input id="accentHex" value="#FFD54A">
-      <input type="color" id="accentColor" value="#FFD54A">
-    </div>
-
-    <div class="actions">
-      <button class="secondary" id="resetColor">템플릿 기본색</button>
-      <button class="primary" id="render">미리보기 갱신</button>
-      <button class="primary full" id="download">PNG 다운로드</button>
-    </div>
-  </section>
-
-  <section class="panel preview">
-    <canvas id="canvas" width="1400" height="1080"></canvas>
-    <div class="note">중개사는 위치·크기·폰트·레이아웃을 변경할 수 없습니다.</div>
-  </section>
+<section class="panel">
+<h1>매물 광고 제작기</h1>
+<div class="desc">관리자가 만든 템플릿을 선택하고 사진과 문구만 입력하세요.</div>
+<label>템플릿</label><select id="tpl"></select>
+<label>방향</label><select id="orientation"><option value="landscape">가로 1400×1080</option><option value="portrait">세로 1080×1300</option></select>
+<div id="photos"></div>
+<label>메인카피</label><input id="headline" value="건대입구역 역세권">
+<label>서브카피</label><input id="subcopy" value="남향 · 주차가능 · 즉시입주">
+<label>가격</label><input id="price" value="매매 9억 8,000만원">
+<label>공인중개사명</label><input id="agency" value="OO공인중개사">
+<label>연락처</label><input id="phone" value="02-0000-0000">
+<button class="primary" id="download">PNG 다운로드</button>
+</section>
+<section class="panel preview"><canvas id="canvas" width="1400" height="1080"></canvas></section>
 </div>
-
 <script src="templates.js"></script>
 <script>
-const $=id=>document.getElementById(id);
-const canvas=$('canvas'),ctx=canvas.getContext('2d');
-let image=null;
-
-function init(){
-  TEMPLATE_CONFIG.templates.forEach(t=>{
-    const o=document.createElement('option'); o.value=t.id; o.textContent=t.name; $('template').appendChild(o);
-  });
-  setDefaultAccent();
-  render();
-}
-function currentTemplate(){return TEMPLATE_CONFIG.templates.find(t=>String(t.id)===$('template').value)||TEMPLATE_CONFIG.templates[0]}
-function currentLayout(){return currentTemplate().layouts[$('format').value]}
-function setDefaultAccent(){
-  const c=currentTemplate().accentDefault;
-  $('accentColor').value=c;$('accentHex').value=c;
-}
-function colorFor(v){return v==='ACCENT' ? $('accentColor').value : v}
-function drawCover(img,x,y,w,h){
-  const ir=img.width/img.height, cr=w/h;
-  let sx=0,sy=0,sw=img.width,sh=img.height;
-  if(ir>cr){sw=img.height*cr;sx=(img.width-sw)/2}else{sh=img.width/cr;sy=(img.height-sh)/2}
-  ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h)
-}
-function rounded(x,y,w,h,r,fill){
-  ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();
-}
-function overlay(layout){
-  const o=layout.overlay||{};
-  if(o.type==='gradient'){
-    const g=ctx.createLinearGradient(0,o.fromY||layout.height*.45,0,layout.height);
-    g.addColorStop(0,'rgba(0,0,0,0)');
-    g.addColorStop(1,`rgba(0,0,0,${o.alpha||.65})`);
-    ctx.fillStyle=g;ctx.fillRect(0,o.fromY||0,layout.width,layout.height-(o.fromY||0));
-  }else if(o.type==='solid'){
-    ctx.fillStyle=`rgba(0,0,0,${o.alpha||.35})`;ctx.fillRect(0,0,layout.width,layout.height);
-  }else if(o.type==='side'){
-    const g=ctx.createLinearGradient(layout.width*.42,0,layout.width,0);
-    g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${o.alpha||.7})`);
-    ctx.fillStyle=g;ctx.fillRect(0,0,layout.width,layout.height);
-  }else if(o.type==='lightbox'){
-    const h=layout.height*.38,y=layout.height-h;
-    ctx.fillStyle=`rgba(255,255,255,${o.alpha||.92})`;ctx.fillRect(0,y,layout.width,h);
-  }else if(o.type==='vignette'){
-    const g=ctx.createRadialGradient(layout.width/2,layout.height/2,layout.width*.15,layout.width/2,layout.height/2,layout.width*.72);
-    g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${o.alpha||.58})`);
-    ctx.fillStyle=g;ctx.fillRect(0,0,layout.width,layout.height);
+const $=id=>document.getElementById(id), ctx=$('canvas').getContext('2d');let templates=JSON.parse(localStorage.getItem('adTemplates')||'null')||DEFAULT_TEMPLATES;let imgs=[];
+function cur(){return templates.find(t=>t.id===$('tpl').value)||templates[0]}
+function fillTpl(){templates.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('tpl').appendChild(o)})}
+function setupPhotos(){
+  const t=cur(), box=$('photos');box.innerHTML='';imgs=[];
+  if(!t.hasPhoto)return;
+  for(let i=0;i<t.photoSplit;i++){
+    const lab=document.createElement('label');lab.textContent=`사진 ${i+1}`;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+    inp.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const im=new Image();im.onload=()=>{imgs[i]=im;render()};im.src=ev.target.result};r.readAsDataURL(f)});
+    box.appendChild(lab);box.appendChild(inp);
   }
 }
-function drawTextBlock(text,cfg){
-  if(!text) return;
-  let size=cfg.fontSize, max=cfg.maxWidth||9999;
-  ctx.textBaseline='top';ctx.textAlign=cfg.align||'left';
-  const weight=cfg.fontWeight||700;
-  while(size>18){
-    ctx.font=`${weight} ${size}px sans-serif`;
-    const words=text.split(' ');let line='',lines=[];
-    for(const w of words){
-      const test=line?line+' '+w:w;
-      if(ctx.measureText(test).width>max && line){lines.push(line);line=w}else line=test;
-    }
-    lines.push(line);
-    if(lines.length<=2) break;
-    size-=2;
-  }
-  ctx.font=`${weight} ${size}px sans-serif`;ctx.fillStyle=colorFor(cfg.color||'#fff');
-  const lh=cfg.lineHeight ? cfg.lineHeight*(size/cfg.fontSize) : size*1.18;
-  const words=text.split(' ');let line='',lines=[];
-  for(const w of words){
-    const test=line?line+' '+w:w;
-    if(ctx.measureText(test).width>max && line){lines.push(line);line=w}else line=test;
-  }
-  lines.push(line);
-  lines.slice(0,2).forEach((ln,i)=>ctx.fillText(ln,cfg.x,cfg.y+i*lh));
+function cover(im,b){const ir=im.width/im.height,cr=b.w/b.h;let sx=0,sy=0,sw=im.width,sh=im.height;if(ir>cr){sw=im.height*cr;sx=(im.width-sw)/2}else{sh=im.width/cr;sy=(im.height-sh)/2}ctx.drawImage(im,sx,sy,sw,sh,b.x,b.y,b.w,b.h)}
+function boxes(split,w,h){
+  const gap=14,pad=30,top=30,uw=w-pad*2,uh=Math.floor(h*.58)-top;let arr=[];
+  if(split===1)arr=[{x:pad,y:top,w:uw,h:uh}];
+  if(split===2)arr=[{x:pad,y:top,w:(uw-gap)/2,h:uh},{x:pad+(uw+gap)/2,y:top,w:(uw-gap)/2,h:uh}];
+  if(split===3)arr=[0,1,2].map(i=>({x:pad+i*((uw-2*gap)/3+gap),y:top,w:(uw-2*gap)/3,h:uh}));
+  if(split===4)arr=[0,1,2,3].map(i=>({x:pad+(i%2)*((uw-gap)/2+gap),y:top+Math.floor(i/2)*((uh-gap)/2+gap),w:(uw-gap)/2,h:(uh-gap)/2}));
+  if(split===6)arr=[0,1,2,3,4,5].map(i=>({x:pad+(i%3)*((uw-2*gap)/3+gap),y:top+Math.floor(i/3)*((uh-gap)/2+gap),w:(uw-2*gap)/3,h:(uh-gap)/2}));
+  return arr;
 }
 function render(){
-  const layout=currentLayout();
-  canvas.width=layout.width;canvas.height=layout.height;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(image) drawCover(image,layout.photo.x,layout.photo.y,layout.photo.w,layout.photo.h);
-  else{
-    const g=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-    g.addColorStop(0,'#dce2e8');g.addColorStop(1,'#aeb8c4');
-    ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
-  overlay(layout);
-  drawTextBlock($('headline').value.trim(),layout.headline);
-  drawTextBlock($('subcopy').value.trim(),layout.subcopy);
-  drawTextBlock($('price').value.trim(),layout.price);
-  drawTextBlock($('agency').value.trim(),layout.agency);
-  drawTextBlock($('phone').value.trim(),layout.phone);
+  const t=cur(),ori=$('orientation').value,dim=t.orientations[ori];$('canvas').width=dim.width;$('canvas').height=dim.height;
+  ctx.fillStyle=t.hasPhoto?'#222':'#f3f4f6';ctx.fillRect(0,0,dim.width,dim.height);
+  const ld=t.layoutData&&t.layoutData[ori];let pb=(ld&&ld.photoBoxes)||boxes(t.photoSplit||1,dim.width,dim.height);
+  if(t.hasPhoto)pb.forEach((b,i)=>{if(imgs[i])cover(imgs[i],b);else{ctx.fillStyle='#cfd5dc';ctx.fillRect(b.x,b.y,b.w,b.h)}})
+  const values={headline:$('headline').value,subcopy:$('subcopy').value,price:$('price').value,agency:$('agency').value,phone:$('phone').value};
+  t.fields.forEach(f=>{const d=(ld&&ld.fields&&ld.fields[f.key])?ld.fields[f.key]:f;ctx.font=`${d.weight||700} ${d.fontSize}px sans-serif`;ctx.fillStyle=d.color;ctx.textAlign=d.align||'left';ctx.textBaseline='top';ctx.fillText(values[f.key]||'',d.x,d.y)});
 }
-$('photo').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=ev=>{image=new Image();image.onload=render;image.src=ev.target.result};r.readAsDataURL(f)
-});
+$('tpl').addEventListener('change',()=>{setupPhotos();render()});$('orientation').addEventListener('change',render);
 ['headline','subcopy','price','agency','phone'].forEach(id=>$(id).addEventListener('input',render));
-$('template').addEventListener('change',()=>{setDefaultAccent();render()});
-$('format').addEventListener('change',render);
-$('accentColor').addEventListener('input',()=>{$('accentHex').value=$('accentColor').value.toUpperCase();render()});
-$('accentHex').addEventListener('change',()=>{
-  const v=$('accentHex').value.trim();
-  if(/^#[0-9A-Fa-f]{6}$/.test(v)){$('accentColor').value=v;render()}
-});
-$('resetColor').addEventListener('click',()=>{setDefaultAccent();render()});
-$('render').addEventListener('click',render);
-$('download').addEventListener('click',()=>{
-  render();const a=document.createElement('a');
-  a.download=`realestate_ad_${$('format').value}_${currentTemplate().id}.png`;
-  a.href=canvas.toDataURL('image/png');a.click();
-});
-init();
+$('download').addEventListener('click',()=>{render();const a=document.createElement('a');a.download='realestate_ad.png';a.href=$('canvas').toDataURL('image/png');a.click()});
+fillTpl();setupPhotos();render();
 </script>
 </body>
 </html>
