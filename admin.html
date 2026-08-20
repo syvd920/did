@@ -123,9 +123,9 @@ function makeCells(split,w,h,o){
     }
   }
 
-  // 3분할: 위 큰 영역 2/3 + 아래 좌우 2칸 1/3
+  // 3분할: 위 큰 영역 약 60% + 아래 좌우 2칸 약 40%
   if(split===3){
-    const topH=h*(2/3);
+    const topH=h*0.60;
     const bottomH=h-topH;
     cells=[
       {x:0,y:0,w:w,h:topH},

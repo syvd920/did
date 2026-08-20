@@ -47,7 +47,7 @@ function makeCells(split,w,h,o){
   }
 
   if(split===3){
-    const topH=h*(2/3);
+    const topH=h*0.60;
     const bottomH=h-topH;
     cells=[
       {x:0,y:0,w:w,h:topH},
@@ -102,15 +102,19 @@ function setupForms(){
     const deal=document.createElement('select');deal.id=`dealType${idx}`;['매매','월세','전세'].forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;deal.appendChild(op)});
     const name=document.createElement('input');name.id=`propertyName${idx}`;name.value='매물명';
     const row=document.createElement('div');row.className='row';
+    const showPy=document.createElement('input');showPy.type='checkbox';showPy.checked=true;showPy.id=`showPyeong${idx}`;showPy.style.width='auto';
+    const showRB=document.createElement('input');showRB.type='checkbox';showRB.checked=true;showRB.id=`showRoomsBaths${idx}`;showRB.style.width='auto';
     const py=document.createElement('input');py.type='number';py.id=`pyeong${idx}`;py.value=25;
     const rb=document.createElement('div');rb.className='row';
     const room=document.createElement('input');room.type='number';room.id=`room${idx}`;room.value=2;
     const bath=document.createElement('input');bath.type='number';bath.id=`bath${idx}`;bath.value=1;rb.append(room,bath);row.append(py,rb);
     const desc=document.createElement('textarea');desc.id=`description${idx}`;desc.value='매물 설명을 입력하세요.';
-    [deal,name,py,room,bath,desc].forEach(el=>el.addEventListener('input',render));
+    [deal,name,py,room,bath,desc,showPy,showRB].forEach(el=>{el.addEventListener('input',render);el.addEventListener('change',render)});
     f.appendChild(document.createElement('label')).textContent='매물 구분';f.append(deal,styleControls('dealType',idx,flds.find(x=>x.key==='dealType')||{}));
     f.appendChild(document.createElement('label')).textContent='매물명';f.append(name,styleControls('propertyName',idx,flds.find(x=>x.key==='propertyName')||{}));
-    f.appendChild(document.createElement('label')).textContent='평 / 방 / 욕실';f.append(row,styleControls('pyeong',idx,flds.find(x=>x.key==='pyeong')||{}),styleControls('roomsBaths',idx,flds.find(x=>x.key==='roomsBaths')||{}));
+    const pyLabel=document.createElement('label');pyLabel.style.display='flex';pyLabel.style.alignItems='center';pyLabel.style.gap='8px';pyLabel.append(showPy,document.createTextNode('평 표시'));
+    const rbLabel=document.createElement('label');rbLabel.style.display='flex';rbLabel.style.alignItems='center';rbLabel.style.gap='8px';rbLabel.append(showRB,document.createTextNode('방 / 욕실 표시'));
+    f.append(pyLabel,py,styleControls('pyeong',idx,flds.find(x=>x.key==='pyeong')||{}),rbLabel,rb,styleControls('roomsBaths',idx,flds.find(x=>x.key==='roomsBaths')||{}));
     f.appendChild(document.createElement('label')).textContent='매물설명';f.append(desc,styleControls('description',idx,flds.find(x=>x.key==='description')||{}));
     box.appendChild(f);
   });
@@ -186,8 +190,8 @@ function render(){
     const flds=(ld&&ld.cellData&&ld.cellData[idx]&&ld.cellData[idx].fields)||baseFields(cell),fm=Object.fromEntries(flds.map(f=>[f.key,f]));
     drawSimple(document.getElementById(`dealType${idx}`).value,fm.dealType,'dealType',idx);
     drawSimple(document.getElementById(`propertyName${idx}`).value,fm.propertyName,'propertyName',idx);
-    drawSimple((document.getElementById(`pyeong${idx}`).value||'')+'평',fm.pyeong,'pyeong',idx);
-    drawSimple(`방 ${document.getElementById(`room${idx}`).value||0} / 욕실 ${document.getElementById(`bath${idx}`).value||0}`,fm.roomsBaths,'roomsBaths',idx);
+    if(document.getElementById(`showPyeong${idx}`)?.checked) drawSimple((document.getElementById(`pyeong${idx}`).value||'')+'평',fm.pyeong,'pyeong',idx);
+    if(document.getElementById(`showRoomsBaths${idx}`)?.checked) drawSimple(`방 ${document.getElementById(`room${idx}`).value||0} / 욕실 ${document.getElementById(`bath${idx}`).value||0}`,fm.roomsBaths,'roomsBaths',idx);
     drawWrapped(document.getElementById(`description${idx}`).value,fm.description,idx);
   });
 }
